@@ -1,0 +1,18 @@
+{
+    "name": "Calluna.Template.Samples",
+    "rootNamespace": "Calluna.Process.Samples",
+    "references": [
+        "GUID:6e11b6063e739f6468948dab11caf494"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
