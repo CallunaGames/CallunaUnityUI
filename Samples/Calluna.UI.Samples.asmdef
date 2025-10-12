@@ -1,12 +1,12 @@
 {
-    "name": "Calluna.Template.Samples",
-    "rootNamespace": "Calluna.Process.Samples",
+    "name": "Calluna.UI.Samples",
+    "rootNamespace": "Calluna.UI.Samples",
     "references": [
-        "GUID:6e11b6063e739f6468948dab11caf494"
+        "GUID:3d5b1a843e90eb44eb1352d7b859bf9b",
+        "GUID:a4e2fcc097ca52d46a2cc62ef3c5e9bf",
+        "GUID:fb92ad7c22f767448a052126eb8fa706"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

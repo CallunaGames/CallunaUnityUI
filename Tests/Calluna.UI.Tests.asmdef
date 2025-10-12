@@ -1,8 +1,12 @@
 {
-    "name": "Calluna.Template",
-    "rootNamespace": "Calluna",
-    "references": [],
-    "includePlatforms": [],
+    "name": "Calluna.UI.Tests",
+    "rootNamespace": "Calluna.UI.Tests",
+    "references": [
+        "GUID:3d5b1a843e90eb44eb1352d7b859bf9b"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
