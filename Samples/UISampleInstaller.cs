@@ -1,3 +1,4 @@
+using System.Globalization;
 using Calluna.DI;
 
 namespace Calluna.UI.Samples
@@ -6,11 +7,14 @@ namespace Calluna.UI.Samples
     {
         private Observable<float> _value = new Observable<float>();
         private Observable<string> _label = new Observable<string>();
+        private Observable<int> _intValue = new Observable<int>();
         
         public override void InstallBindings(Binder binder)
         {
             binder.Bind<ReadonlyObservable<float>>().And<Observable<float>>().ToInstance(_value);
+            binder.Bind<ReadonlyObservable<int>>().And<Observable<int>>().ToInstance(_intValue);
             binder.Bind<ReadonlyObservable<string>>().And<Observable<string>>().ToInstance(_label);
+            binder.BindInstance(CultureInfo.CurrentCulture);
         }
     }
 }
