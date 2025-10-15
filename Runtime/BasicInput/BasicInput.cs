@@ -6,29 +6,29 @@ namespace Calluna.UI
 {
     public abstract class BasicInput<TValue> : MonoBehaviour, Injectable, Initializable, Cleanable
     {
-        private Observable<TValue> _value;
+        private Observable<TValue> _observableValue;
         
         public virtual void Inject(Resolver resolver)
         {
-            _value = resolver.Resolve<Observable<TValue>>();
+            _observableValue = resolver.Resolve<Observable<TValue>>();
         }
 
-        public void Initialize()
+        public virtual void Initialize()
         {
-            _value.OnChanged += UpdateInput;
-            UpdateInput(_value.Value);
+            _observableValue.OnChanged += UpdateInput;
+            UpdateInput(_observableValue.Value);
             AddInputListener();
         }
 
-        public void Clean()
+        public virtual void Clean()
         {
-            _value.OnChanged -= UpdateInput;
+            _observableValue.OnChanged -= UpdateInput;
             RemoveInputListener();
         }
 
         protected void SetValue(TValue value)
         {
-            _value.Value = value;
+            _observableValue.Value = value;
         }
         
         protected abstract void UpdateInput(TValue value);
@@ -37,7 +37,7 @@ namespace Calluna.UI
 
         private void UpdateInput()
         {
-            UpdateInput(_value.Value);
+            UpdateInput(_observableValue.Value);
         }
     }
 }
