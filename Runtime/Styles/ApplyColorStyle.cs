@@ -7,8 +7,8 @@ namespace Calluna.UI
 {
     public class ApplyColorStyle : MonoBehaviour, Injectable, Initializable
     {
-        [SerializeField] private ColorStyle _colorStyle;
         [SerializeField] private Graphic _graphic;
+        [SerializeField, Space] private ColorStyle _colorStyle;
 
         private ColorStyleSettings _styleSettings;
         

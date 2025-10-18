@@ -22,8 +22,8 @@ namespace Calluna.UI
         [Serializable]
         public class ColorStyleSetting
         {
-            [field: SerializeField] public Color Color { get; private set; }
             [field: SerializeField] public ColorStyle Style { get; private set; }
+            [field: SerializeField] public Color Color { get; private set; }
         }
     }
 }

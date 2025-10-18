@@ -295,9 +295,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _colorStyle:
-    <EnumValue>k__BackingField: 2
   _graphic: {fileID: 93501452}
+  _colorStyle:
+    <EnumValue>k__BackingField: 0
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &100864143
 GameObject:
   m_ObjectHideFlags: 0
@@ -721,9 +723,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _colorStyle:
-    <EnumValue>k__BackingField: 2
   _graphic: {fileID: 318230513}
+  _colorStyle:
+    <EnumValue>k__BackingField: 1
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &540624805
 GameObject:
   m_ObjectHideFlags: 0
@@ -873,9 +877,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _graphic: {fileID: 540624807}
   _colorStyle:
     <EnumValue>k__BackingField: 3
-  _graphic: {fileID: 540624807}
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &670975769
 GameObject:
   m_ObjectHideFlags: 0
@@ -1040,9 +1046,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _graphic: {fileID: 670975772}
   _colorStyle:
     <EnumValue>k__BackingField: 3
-  _graphic: {fileID: 670975772}
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &720068982
 GameObject:
   m_ObjectHideFlags: 0
@@ -1192,9 +1200,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _graphic: {fileID: 720068984}
   _colorStyle:
     <EnumValue>k__BackingField: 3
-  _graphic: {fileID: 720068984}
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &721401327
 GameObject:
   m_ObjectHideFlags: 0
@@ -1284,9 +1294,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _graphic: {fileID: 721401329}
   _colorStyle:
     <EnumValue>k__BackingField: 0
-  _graphic: {fileID: 721401329}
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &765013237
 GameObject:
   m_ObjectHideFlags: 0
@@ -1686,9 +1698,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _graphic: {fileID: 821819714}
   _colorStyle:
     <EnumValue>k__BackingField: 3
-  _graphic: {fileID: 821819714}
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &868305546
 GameObject:
   m_ObjectHideFlags: 0
@@ -1885,9 +1899,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _graphic: {fileID: 884721373}
   _colorStyle:
     <EnumValue>k__BackingField: 0
-  _graphic: {fileID: 884721373}
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &888314828
 GameObject:
   m_ObjectHideFlags: 0
@@ -2060,9 +2076,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _graphic: {fileID: 888314832}
   _colorStyle:
     <EnumValue>k__BackingField: 0
-  _graphic: {fileID: 888314832}
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &953149702
 GameObject:
   m_ObjectHideFlags: 0
@@ -2302,9 +2320,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _graphic: {fileID: 1036268579}
   _colorStyle:
     <EnumValue>k__BackingField: 3
-  _graphic: {fileID: 1036268579}
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &1271891671
 GameObject:
   m_ObjectHideFlags: 0
@@ -2469,9 +2489,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _graphic: {fileID: 1271891674}
   _colorStyle:
     <EnumValue>k__BackingField: 3
-  _graphic: {fileID: 1271891674}
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &1333970208
 GameObject:
   m_ObjectHideFlags: 0
@@ -2690,9 +2712,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _colorStyle:
-    <EnumValue>k__BackingField: 2
   _graphic: {fileID: 1646423824}
+  _colorStyle:
+    <EnumValue>k__BackingField: 1
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &1650362969
 GameObject:
   m_ObjectHideFlags: 0
@@ -3023,9 +3047,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _colorStyle:
-    <EnumValue>k__BackingField: 2
   _graphic: {fileID: 1865856650}
+  _colorStyle:
+    <EnumValue>k__BackingField: 1
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &1882262216
 GameObject:
   m_ObjectHideFlags: 0
@@ -3190,9 +3216,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _graphic: {fileID: 1882262219}
   _colorStyle:
     <EnumValue>k__BackingField: 3
-  _graphic: {fileID: 1882262219}
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &1922629112
 GameObject:
   m_ObjectHideFlags: 0
@@ -3281,9 +3309,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _graphic: {fileID: 1922629114}
   _colorStyle:
     <EnumValue>k__BackingField: 0
-  _graphic: {fileID: 1922629114}
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &1952725090
 GameObject:
   m_ObjectHideFlags: 0
