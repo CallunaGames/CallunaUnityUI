@@ -10,98 +10,119 @@ namespace Calluna.UI.Editor
     [CustomPropertyDrawer(typeof(ColorStyle))]
     public class ColorStyleDrawer : PropertyDrawer
     {
-        private const string _enumIndexBacking = "<SelectedEnumIndex>k__BackingField";
-        private const string _enumNameBacking = "<SelectedEnumName>k__BackingField";
-        private const string _enumValueBacking = "<EnumValue>k__BackingField";
+        private static string _enumIndexBacking;
+        private static string _enumNameBacking;
+        private static string _enumValueBacking;
 
         private static EnumCache[] _cache;
         private static bool _hasWarnedNone;
+        private static bool _createdNames = false;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
+            UpdatePropertyNames();
             EnsureCache();
+            SerializedProperty enumIndexProp = property.FindPropertyRelative(_enumIndexBacking);
+            SerializedProperty enumNameProp = property.FindPropertyRelative(_enumNameBacking);
+            UpdateSelectedEnum(enumNameProp, enumIndexProp);
 
             float line = EditorGUIUtility.singleLineHeight;
             float spacing = EditorGUIUtility.standardVerticalSpacing;
-            float size = 2 * line + 2 * spacing;
-
-            if (_cache.Length > 1)
-            {
-                size += line + spacing;
-            }
-
-            var enumIndexProp = property.FindPropertyRelative(_enumIndexBacking);
-            EnumCache selectedCache = enumIndexProp.intValue < _cache.Length ? _cache[enumIndexProp.intValue] : null;
-            if (_cache.Length == 0 ||
-                selectedCache != null && selectedCache.EnumType.Attribute.IsExample)
-            {
-                // room for help box
-                size += spacing + line * 2f;
-            }
-
+            float lineAndSpace = line + spacing;
+            float size = 2 * lineAndSpace;
+            size += AddEnumSelectionSize();
+            size += AddRoomForHelpBox(enumIndexProp);
             return size;
+        }
+
+        private float AddEnumSelectionSize()
+        {
+            return _cache.Length > 1 ? EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing : 0;
+        }
+
+        private float AddRoomForHelpBox(SerializedProperty enumIndexProp)
+        {
+            bool hasHelpBox = _cache.Length == 0 || _cache[enumIndexProp.intValue].EnumType.Attribute.IsExample;
+            return hasHelpBox ? EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing : 0;
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            UpdatePropertyNames();
             EnsureCache();
+            
+            SerializedProperty enumValueProp = property.FindPropertyRelative(_enumValueBacking);
+            DrawHeader(position, label.text);
+
+            if (CreateNoEnumHelpBox(position, label, enumValueProp))
+            {
+                return;
+            }
 
             SerializedProperty enumIndexProp = property.FindPropertyRelative(_enumIndexBacking);
-            SerializedProperty enumValueProp = property.FindPropertyRelative(_enumValueBacking);
             SerializedProperty enumNameProp = property.FindPropertyRelative(_enumNameBacking);
+            UpdateSelectedEnum(enumNameProp, enumIndexProp);
+            CreatePropertyScope(position, label, property, enumIndexProp, enumNameProp, enumValueProp);
+        }
 
-            if (enumValueProp == null || enumIndexProp == null || enumNameProp == null)
-            {
-                EditorGUI.HelpBox(position, "Could not find backing fields.", MessageType.Error);
-                return;
-            }
-
-            // Draw label as a foldout-less property line
+        private void CreatePropertyScope(Rect position, GUIContent label, SerializedProperty property, 
+            SerializedProperty enumIndexProp, SerializedProperty enumNameProp, SerializedProperty enumValueProp)
+        {
             float line = EditorGUIUtility.singleLineHeight;
             float spacing = EditorGUIUtility.standardVerticalSpacing;
-            Rect headerRect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
-            Rect enumRect = new Rect(position.x, headerRect.y + spacing + line, position.width,
-                EditorGUIUtility.singleLineHeight);
-            Rect enumValueRect = new Rect(position.x, enumRect.y + spacing + line, position.width,
-                EditorGUIUtility.singleLineHeight);
-
-            // Draw header
-            EditorGUI.LabelField(headerRect, label.text, EditorStyles.boldLabel);
-
-            if (_cache.Length == 0)
-            {
-                // Fallback: show int field and a help box explaining why
-                EditorGUI.PropertyField(enumRect, enumValueProp, label);
-                Rect help = position;
-                help.yMin = enumRect.yMax + EditorGUIUtility.standardVerticalSpacing;
-                EditorGUI.HelpBox(help,
-                    $"No enum type with [{nameof(ColorStyleAttribute)}] was found.\n" +
-                    $"Define a custom enum and decorate it with [{nameof(ColorStyleAttribute)}].",
-                    MessageType.Info);
-                return;
-            }
-            
-            int currentEnumIndex = enumIndexProp.intValue;
-            EnumCache selectedCache = currentEnumIndex < _cache.Length ? _cache[currentEnumIndex] : null;
-            if (selectedCache == null || selectedCache.EnumType.EnumType.FullName != enumNameProp.stringValue)
-            {
-                EnumCache matchingCache =
-                    _cache.FirstOrDefault(e => e.EnumType.EnumType.FullName == enumNameProp.stringValue);
-                int index = Array.IndexOf(_cache, matchingCache);
-                if (index >= 0 && index != currentEnumIndex)
-                {
-                    enumIndexProp.intValue = index;
-                    enumIndexProp.serializedObject.ApplyModifiedProperties();
-                }
-            }
-
             using (new EditorGUI.PropertyScope(position, label, property))
-            {
+            { 
+                Rect enumRect = new Rect(position.x, position.y + spacing + line, position.width,
+                    EditorGUIUtility.singleLineHeight);
+                Rect enumValueRect = new Rect(position.x, enumRect.y + spacing + line, position.width,
+                    EditorGUIUtility.singleLineHeight);
                 bool shallDrawEnumDropdown = _cache.Length > 1;
-                currentEnumIndex = shallDrawEnumDropdown ? CreateEnumDropdown(enumIndexProp, enumNameProp, enumRect) : 0;
+                int currentEnumIndex = shallDrawEnumDropdown ? CreateEnumDropdown(enumIndexProp, enumNameProp, enumRect) : 0;
                 Rect lineRect = shallDrawEnumDropdown ? enumValueRect : enumRect;
                 CreateEnumValueDropdown(enumValueProp, currentEnumIndex, lineRect, label.text);
             }
+        }
+
+        private void UpdateSelectedEnum(SerializedProperty enumName, SerializedProperty enumIndex)
+        {
+            int currentEnumIndex = enumIndex.intValue;
+            EnumCache selectedCache = currentEnumIndex < _cache.Length ? _cache[currentEnumIndex] : null;
+            if (selectedCache == null || selectedCache.EnumType.EnumType.FullName != enumName.stringValue)
+            {
+                EnumCache matchingCache =
+                    _cache.FirstOrDefault(e => e.EnumType.EnumType.FullName == enumName.stringValue);
+                int index = Array.IndexOf(_cache, matchingCache);
+                if (index != currentEnumIndex)
+                {
+                    enumIndex.intValue = index >= 0 ? index : 0;
+                    enumIndex.serializedObject.ApplyModifiedProperties();
+                }
+            }
+        }
+
+        private void DrawHeader(Rect position, string label)
+        {
+            Rect headerRect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
+            EditorGUI.LabelField(headerRect, label, EditorStyles.boldLabel);
+        }
+
+        private bool CreateNoEnumHelpBox(Rect position, GUIContent label, SerializedProperty enumValueProp)
+        {
+            if (_cache.Length > 0)
+                return false;
+            
+            float y = position.y + EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            Rect enumRect = new Rect(position.x, y, position.width,
+                EditorGUIUtility.singleLineHeight);
+            // Draw label as a foldout-less property line
+            EditorGUI.PropertyField(enumRect, enumValueProp, label);
+            Rect help = position;
+            help.yMin = enumRect.yMax + EditorGUIUtility.standardVerticalSpacing;
+            EditorGUI.HelpBox(help,
+                $"No enum type with [{nameof(ColorStyleAttribute)}] was found.\n" +
+                $"Define a custom enum and decorate it with [{nameof(ColorStyleAttribute)}].",
+                MessageType.Info);
+            return true;
         }
 
         private int CreateEnumDropdown(SerializedProperty enumIndexProp, SerializedProperty enumNameProp, Rect line)
@@ -264,6 +285,17 @@ namespace Calluna.UI.Editor
                 Values = values,
                 Options = options
             };
+        }
+
+        private static void UpdatePropertyNames()
+        {
+            if(_createdNames)
+                return;
+            
+            _createdNames = true;
+            _enumIndexBacking = $"<{nameof(ColorStyle.SelectedEnumIndex)}>k__BackingField";
+            _enumNameBacking = $"<{nameof(ColorStyle.SelectedEnumName)}>k__BackingField";
+            _enumValueBacking = $"<{nameof(ColorStyle.EnumValue)}>k__BackingField";
         }
 
         private struct StyleEnumInfo
