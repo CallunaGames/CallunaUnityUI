@@ -20,18 +20,13 @@ namespace Calluna.UI.Editor
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            UpdatePropertyNames();
             EnsureCache();
-            SerializedProperty enumIndexProp = property.FindPropertyRelative(_enumIndexBacking);
-            SerializedProperty enumNameProp = property.FindPropertyRelative(_enumNameBacking);
-            UpdateSelectedEnum(enumNameProp, enumIndexProp);
-
             float line = EditorGUIUtility.singleLineHeight;
             float spacing = EditorGUIUtility.standardVerticalSpacing;
             float lineAndSpace = line + spacing;
             float size = 2 * lineAndSpace;
             size += AddEnumSelectionSize();
-            size += AddRoomForHelpBox(enumIndexProp);
+            size += AddRoomForHelpBox();
             return size;
         }
 
@@ -40,9 +35,9 @@ namespace Calluna.UI.Editor
             return _cache.Length > 1 ? EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing : 0;
         }
 
-        private float AddRoomForHelpBox(SerializedProperty enumIndexProp)
+        private float AddRoomForHelpBox()
         {
-            bool hasHelpBox = _cache.Length == 0 || _cache[enumIndexProp.intValue].EnumType.Attribute.IsExample;
+            bool hasHelpBox = _cache.Length == 0;
             return hasHelpBox ? EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing : 0;
         }
 
@@ -168,16 +163,6 @@ namespace Calluna.UI.Editor
                 enumValueProp.intValue = selectedCache.Values[newIndex];
                 enumValueProp.serializedObject.ApplyModifiedProperties();
             }
-
-            if (selectedCache.EnumType.Attribute.IsExample)
-            {
-                float line = EditorGUIUtility.singleLineHeight;
-                float spacing = EditorGUIUtility.standardVerticalSpacing;
-                var helpRect = new Rect(lineRect.x, lineRect.yMax + spacing, lineRect.width, line * 2);
-                EditorGUI.HelpBox(helpRect,
-                    $"Using example enum with [{nameof(ColorStyleAttribute)}]. Consider defining a custom one.",
-                    MessageType.Warning);
-            }
         }
 
         /// <summary>
@@ -276,12 +261,12 @@ namespace Calluna.UI.Editor
             GUIContent[] options = new GUIContent[names.Length];
             for (int i = 0; i < names.Length; i++)
                 options[i] = new GUIContent(ObjectNames.NicifyVariableName(names[i]));
+            string exampleText = enumInfo.Attribute.IsExample ? " (Example)" : string.Empty;
 
             return new EnumCache
             {
                 EnumType = enumInfo,
-                DisplayName = enumInfo.EnumType.FullName,
-                Names = names,
+                DisplayName = enumInfo.EnumType.FullName + exampleText,
                 Values = values,
                 Options = options
             };
@@ -308,7 +293,6 @@ namespace Calluna.UI.Editor
         {
             public StyleEnumInfo EnumType;
             public string DisplayName;
-            public string[] Names;
             public int[] Values;
             public GUIContent[] Options;
         }

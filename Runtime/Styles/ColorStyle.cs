@@ -7,8 +7,8 @@ namespace Calluna.UI
     public class ColorStyle : IEquatable<ColorStyle>
     {
         [field: SerializeField] public int EnumValue { get; private set; }
-        [field: SerializeField] public int SelectedEnumIndex {get; set; }
-        [field: SerializeField] public string SelectedEnumName {get; set; }
+        [field: SerializeField] public int SelectedEnumIndex { get; private set; }
+        [field: SerializeField] public string SelectedEnumName { get; private set; }
 
         public bool Equals(ColorStyle other)
         {
