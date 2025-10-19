@@ -218,6 +218,7 @@ GameObject:
   - component: {fileID: 93501451}
   - component: {fileID: 93501453}
   - component: {fileID: 93501452}
+  - component: {fileID: 93501454}
   m_Layer: 5
   m_Name: Handle
   m_TagString: Untagged
@@ -282,6 +283,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 93501450}
   m_CullTransparentMesh: 1
+--- !u!114 &93501454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 93501450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 93501452}
+  _colorStyle:
+    <EnumValue>k__BackingField: 0
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &100864143
 GameObject:
   m_ObjectHideFlags: 0
@@ -615,6 +633,7 @@ GameObject:
   - component: {fileID: 318230514}
   - component: {fileID: 318230513}
   - component: {fileID: 318230512}
+  - component: {fileID: 318230515}
   m_Layer: 5
   m_Name: RadialProgress
   m_TagString: Untagged
@@ -692,6 +711,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 318230510}
   m_CullTransparentMesh: 1
+--- !u!114 &318230515
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 318230510}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 318230513}
+  _colorStyle:
+    <EnumValue>k__BackingField: 1
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &540624805
 GameObject:
   m_ObjectHideFlags: 0
@@ -703,6 +739,7 @@ GameObject:
   - component: {fileID: 540624806}
   - component: {fileID: 540624808}
   - component: {fileID: 540624807}
+  - component: {fileID: 540624809}
   m_Layer: 5
   m_Name: Item Label
   m_TagString: Untagged
@@ -828,6 +865,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 540624805}
   m_CullTransparentMesh: 1
+--- !u!114 &540624809
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 540624805}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 540624807}
+  _colorStyle:
+    <EnumValue>k__BackingField: 3
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &670975769
 GameObject:
   m_ObjectHideFlags: 0
@@ -840,6 +894,7 @@ GameObject:
   - component: {fileID: 670975773}
   - component: {fileID: 670975772}
   - component: {fileID: 670975771}
+  - component: {fileID: 670975774}
   m_Layer: 5
   m_Name: Text
   m_TagString: Untagged
@@ -979,6 +1034,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 670975769}
   m_CullTransparentMesh: 1
+--- !u!114 &670975774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 670975769}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 670975772}
+  _colorStyle:
+    <EnumValue>k__BackingField: 3
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &720068982
 GameObject:
   m_ObjectHideFlags: 0
@@ -990,6 +1062,7 @@ GameObject:
   - component: {fileID: 720068983}
   - component: {fileID: 720068985}
   - component: {fileID: 720068984}
+  - component: {fileID: 720068986}
   m_Layer: 5
   m_Name: Label
   m_TagString: Untagged
@@ -1115,6 +1188,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 720068982}
   m_CullTransparentMesh: 1
+--- !u!114 &720068986
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 720068982}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 720068984}
+  _colorStyle:
+    <EnumValue>k__BackingField: 3
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &721401327
 GameObject:
   m_ObjectHideFlags: 0
@@ -1126,6 +1216,7 @@ GameObject:
   - component: {fileID: 721401328}
   - component: {fileID: 721401330}
   - component: {fileID: 721401329}
+  - component: {fileID: 721401331}
   m_Layer: 5
   m_Name: RadialProgressView
   m_TagString: Untagged
@@ -1191,6 +1282,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 721401327}
   m_CullTransparentMesh: 1
+--- !u!114 &721401331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 721401327}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 721401329}
+  _colorStyle:
+    <EnumValue>k__BackingField: 0
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &765013237
 GameObject:
   m_ObjectHideFlags: 0
@@ -1278,6 +1386,7 @@ GameObject:
   - component: {fileID: 795194125}
   - component: {fileID: 795194124}
   - component: {fileID: 795194123}
+  - component: {fileID: 795194127}
   m_Layer: 0
   m_Name: SceneContext
   m_TagString: Untagged
@@ -1332,6 +1441,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _monoInstallers:
   - {fileID: 795194124}
+  - {fileID: 795194127}
   _scriptableObjectInstallers: []
   _iD: UITest
   _parentContextID: 
@@ -1350,6 +1460,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &795194127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 795194122}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af1744af9eb7ed04685fa40a852733e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _colorStyleSettings: {fileID: 11400000, guid: f0d0f05ffd0d5a440aa1493700ebb476, type: 2}
 --- !u!1 &802694053
 GameObject:
   m_ObjectHideFlags: 0
@@ -1431,7 +1554,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
+  m_BackGroundColor: {r: 0.29559743, g: 0.29559743, b: 0.29559743, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -1498,6 +1621,7 @@ GameObject:
   - component: {fileID: 821819713}
   - component: {fileID: 821819715}
   - component: {fileID: 821819714}
+  - component: {fileID: 821819716}
   m_Layer: 5
   m_Name: Item Checkmark
   m_TagString: Untagged
@@ -1562,6 +1686,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 821819712}
   m_CullTransparentMesh: 1
+--- !u!114 &821819716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 821819712}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 821819714}
+  _colorStyle:
+    <EnumValue>k__BackingField: 3
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &868305546
 GameObject:
   m_ObjectHideFlags: 0
@@ -1681,6 +1822,7 @@ GameObject:
   - component: {fileID: 884721372}
   - component: {fileID: 884721374}
   - component: {fileID: 884721373}
+  - component: {fileID: 884721375}
   m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
@@ -1745,6 +1887,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 884721371}
   m_CullTransparentMesh: 1
+--- !u!114 &884721375
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 884721371}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 884721373}
+  _colorStyle:
+    <EnumValue>k__BackingField: 0
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &888314828
 GameObject:
   m_ObjectHideFlags: 0
@@ -1758,6 +1917,7 @@ GameObject:
   - component: {fileID: 888314832}
   - component: {fileID: 888314831}
   - component: {fileID: 888314830}
+  - component: {fileID: 888314834}
   m_Layer: 5
   m_Name: Dropdown
   m_TagString: Untagged
@@ -1904,6 +2064,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 888314828}
   m_CullTransparentMesh: 1
+--- !u!114 &888314834
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 888314828}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 888314832}
+  _colorStyle:
+    <EnumValue>k__BackingField: 0
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &953149702
 GameObject:
   m_ObjectHideFlags: 0
@@ -1991,6 +2168,7 @@ GameObject:
   - component: {fileID: 1036268580}
   - component: {fileID: 1036268579}
   - component: {fileID: 1036268578}
+  - component: {fileID: 1036268581}
   m_Layer: 5
   m_Name: FloatText
   m_TagString: Untagged
@@ -2130,6 +2308,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1036268576}
   m_CullTransparentMesh: 1
+--- !u!114 &1036268581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1036268576}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 1036268579}
+  _colorStyle:
+    <EnumValue>k__BackingField: 3
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &1271891671
 GameObject:
   m_ObjectHideFlags: 0
@@ -2142,6 +2337,7 @@ GameObject:
   - component: {fileID: 1271891675}
   - component: {fileID: 1271891674}
   - component: {fileID: 1271891673}
+  - component: {fileID: 1271891676}
   m_Layer: 5
   m_Name: SelectedIndex
   m_TagString: Untagged
@@ -2281,6 +2477,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1271891671}
   m_CullTransparentMesh: 1
+--- !u!114 &1271891676
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1271891671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 1271891674}
+  _colorStyle:
+    <EnumValue>k__BackingField: 3
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &1333970208
 GameObject:
   m_ObjectHideFlags: 0
@@ -2372,6 +2585,7 @@ GameObject:
   - component: {fileID: 1646423825}
   - component: {fileID: 1646423824}
   - component: {fileID: 1646423823}
+  - component: {fileID: 1646423826}
   m_Layer: 5
   m_Name: Scrollbar
   m_TagString: Untagged
@@ -2486,6 +2700,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1646423821}
   m_CullTransparentMesh: 1
+--- !u!114 &1646423826
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1646423821}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 1646423824}
+  _colorStyle:
+    <EnumValue>k__BackingField: 1
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &1650362969
 GameObject:
   m_ObjectHideFlags: 0
@@ -2739,6 +2970,7 @@ GameObject:
   - component: {fileID: 1865856649}
   - component: {fileID: 1865856651}
   - component: {fileID: 1865856650}
+  - component: {fileID: 1865856652}
   m_Layer: 5
   m_Name: Fill
   m_TagString: Untagged
@@ -2803,6 +3035,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1865856648}
   m_CullTransparentMesh: 1
+--- !u!114 &1865856652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1865856648}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 1865856650}
+  _colorStyle:
+    <EnumValue>k__BackingField: 1
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &1882262216
 GameObject:
   m_ObjectHideFlags: 0
@@ -2815,6 +3064,7 @@ GameObject:
   - component: {fileID: 1882262220}
   - component: {fileID: 1882262219}
   - component: {fileID: 1882262221}
+  - component: {fileID: 1882262222}
   m_Layer: 5
   m_Name: Index
   m_TagString: Untagged
@@ -2954,6 +3204,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _text: {fileID: 1882262219}
   _format: 
+--- !u!114 &1882262222
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1882262216}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 1882262219}
+  _colorStyle:
+    <EnumValue>k__BackingField: 3
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &1922629112
 GameObject:
   m_ObjectHideFlags: 0
@@ -2965,6 +3232,7 @@ GameObject:
   - component: {fileID: 1922629113}
   - component: {fileID: 1922629115}
   - component: {fileID: 1922629114}
+  - component: {fileID: 1922629116}
   m_Layer: 5
   m_Name: Item Background
   m_TagString: Untagged
@@ -3029,6 +3297,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1922629112}
   m_CullTransparentMesh: 1
+--- !u!114 &1922629116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1922629112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caa08234ebd17cf46b80ff5dfcdf3c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _graphic: {fileID: 1922629114}
+  _colorStyle:
+    <EnumValue>k__BackingField: 0
+    <SelectedEnumIndex>k__BackingField: 1
+    <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
 --- !u!1 &1952725090
 GameObject:
   m_ObjectHideFlags: 0
