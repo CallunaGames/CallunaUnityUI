@@ -1,18 +1,25 @@
 {
   "name": "com.calluna.ui",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "displayName": "Calluna Unity UI",
-  "description": "",
-  "unity": "6000.58",
+  "description": "UI basics for Calluna Games Unity projects",
+  "unity": "6000.33",
   "unityRelease": "",
   "documentationUrl": "https://github.com/CallunaGames/CallunaUnityUI",
-  "changelogUrl": "",
+  "changelogUrl": "https://github.com/CallunaGames/UnitySceneManagement/commit/v1.0.0",
   "licensesUrl": "",
   "dependencies": {
-    
- },
- "keywords": [
-    
+    "com.calluna.core": "1.0.3",
+    "com.calluna.di": "1.0.1"
+  },
+  "samples": [
+    {
+      "displayName": "Basic UI",
+      "description": "Example of basic UI elements using observables as and DI",
+      "path": "Samples~/BasicUI"
+    }
+  ],
+  "keywords": [
   ],
   "author": {
     "name": "Calluna Games",
