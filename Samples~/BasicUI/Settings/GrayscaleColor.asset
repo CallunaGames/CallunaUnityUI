@@ -15,21 +15,21 @@ MonoBehaviour:
   _settings:
   - <Style>k__BackingField:
       <EnumValue>k__BackingField: 0
-      <SelectedEnumIndex>k__BackingField: 1
+      <SelectedEnumIndex>k__BackingField: 0
       <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
     <Color>k__BackingField: {r: 0, g: 0, b: 0, a: 1}
   - <Style>k__BackingField:
       <EnumValue>k__BackingField: 1
-      <SelectedEnumIndex>k__BackingField: 1
+      <SelectedEnumIndex>k__BackingField: 0
       <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
     <Color>k__BackingField: {r: 0.66666657, g: 0.42557642, b: 0.42557642, a: 1}
   - <Style>k__BackingField:
       <EnumValue>k__BackingField: 2
-      <SelectedEnumIndex>k__BackingField: 1
+      <SelectedEnumIndex>k__BackingField: 0
       <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
     <Color>k__BackingField: {r: 0.37106913, g: 0.37106913, b: 0.37106913, a: 1}
   - <Style>k__BackingField:
       <EnumValue>k__BackingField: 3
-      <SelectedEnumIndex>k__BackingField: 1
+      <SelectedEnumIndex>k__BackingField: 0
       <SelectedEnumName>k__BackingField: Calluna.UI.ColorStyleDefinition
     <Color>k__BackingField: {r: 0.91823894, g: 0.91823894, b: 0.91823894, a: 1}

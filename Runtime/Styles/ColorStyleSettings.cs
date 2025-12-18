@@ -15,7 +15,8 @@ namespace Calluna.UI
             ColorStyleSetting setting = _settings.FirstOrDefault(s => s.Style.Equals(style));
             if(setting != null)
                 return setting.Color;
-            throw new ArgumentException($"There is no color defined for the style '{style.EnumValue}'.");
+            throw new ArgumentException($"There is no color defined for the style '{style.EnumValue}' ({style.SelectedEnumName})." +
+                                        $"Please open the style settings and see if everything is setup correctly.");
         }
 
         [Serializable]

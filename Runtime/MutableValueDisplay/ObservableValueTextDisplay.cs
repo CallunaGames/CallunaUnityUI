@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Calluna.UI
 {
-    public abstract class MutableValueDisplay<TValue> : MonoBehaviour, Injectable, Initializable, Cleanable
+    public abstract class ObservableValueTextDisplay<TValue> : MonoBehaviour, Injectable, Initializable, Cleanable
     {
         [SerializeField] private TextMeshProUGUI _text;
         [SerializeField] private string _format = string.Empty;
