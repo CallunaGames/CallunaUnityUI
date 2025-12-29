@@ -1,20 +1,20 @@
-using System;
 using Calluna.DI;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Calluna.UI
 {
-    public class ApplyColorStyle : MonoBehaviour, Injectable, Initializable
+    public class ApplyColorStyle : MonoBehaviour, Injectable, Initializable, Cleanable
     {
         [SerializeField] private Graphic _graphic;
-        [SerializeField, Space] private ColorStyle _colorStyle;
+        [SerializeField, Space] private ColorStyleId _colorStyle;
 
-        private ColorStyleSettings _styleSettings;
-        
+        private ReadonlyObservable<ColorStyleSettings> _styleSettings;
+        private Color _initialColor;
+
         public void Inject(Resolver resolver)
         {
-            _styleSettings = resolver.Resolve<ColorStyleSettings>();
+            _styleSettings = resolver.Resolve<ReadonlyObservable<ColorStyleSettings>>();
         }
 
         private void Reset()
@@ -24,7 +24,19 @@ namespace Calluna.UI
 
         public void Initialize()
         {
-            _graphic.color = _styleSettings.GetColorOf(_colorStyle);
+            _initialColor = _graphic.color;
+            _styleSettings.OnChanged += UpdateColor;
+            UpdateColor();
+        }
+
+        public void Clean()
+        {
+            _styleSettings.OnChanged -= UpdateColor;
+        }
+
+        private void UpdateColor()
+        {
+            _graphic.color = _styleSettings.HasValue ? _styleSettings.Value.GetColorOf(_colorStyle) : _initialColor;
         }
     }
 }

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff1e806eb31e9664ebb24dd0a3ba9024, type: 3}
+  m_Name: ColorfulColors
+  m_EditorClassIdentifier: 
+  _settings:
+  - <Style>k__BackingField: {fileID: 11400000, guid: 55b58e978dc114140b87d53231ffdaf0, type: 2}
+    <Color>k__BackingField: {r: 0.6037736, g: 0.47629943, b: 0.07404763, a: 1}
+  - <Style>k__BackingField: {fileID: 11400000, guid: 6431208121bfd754389045fe20b269f2, type: 2}
+    <Color>k__BackingField: {r: 0.6506071, g: 0.79024607, b: 0.8050314, a: 1}
+  - <Style>k__BackingField: {fileID: 11400000, guid: a584709282c22c440a62bacb0818e8bf, type: 2}
+    <Color>k__BackingField: {r: 0.77254903, g: 0.2745098, b: 0.2892644, a: 1}
+  - <Style>k__BackingField: {fileID: 11400000, guid: f4d68c2c9285e4744a04a4df8ff43bce, type: 2}
+    <Color>k__BackingField: {r: 0.6506071, g: 0.79024607, b: 0.8050314, a: 1}
