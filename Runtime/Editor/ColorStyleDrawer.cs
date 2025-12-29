@@ -91,6 +91,8 @@ namespace Calluna.UI.Editor
                 {
                     enumIndex.intValue = index >= 0 ? index : 0;
                     enumIndex.serializedObject.ApplyModifiedProperties();
+                    string displayName = matchingCache != null ? matchingCache.DisplayName : string.Empty;
+                    Debug.LogWarning($"The number of enums with the {nameof(ColorStyleAttribute)} have changed. The index of '{displayName}' of the color style changed from {currentEnumIndex} to {index}");
                 }
             }
         }
