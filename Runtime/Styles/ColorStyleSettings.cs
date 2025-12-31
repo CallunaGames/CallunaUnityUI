@@ -12,7 +12,7 @@ namespace Calluna.UI
 
         public Color GetColorOf(ColorStyleId style)
         {
-            ColorStyleSetting setting = _settings.FirstOrDefault(s => s.Style.Equals(style));
+            ColorStyleSetting setting = _settings.FirstOrDefault(s => s.Style == style);
             if(setting != null)
                 return setting.Color;
             throw new ArgumentException($"There is no color defined for the style '{style}'." +
