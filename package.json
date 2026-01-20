@@ -1,15 +1,15 @@
 {
   "name": "com.calluna.ui",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "displayName": "Calluna Unity UI",
   "description": "UI basics for Calluna Games Unity projects",
   "unity": "6000.33",
   "unityRelease": "",
   "documentationUrl": "https://github.com/CallunaGames/CallunaUnityUI",
-  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityUI/compare/v1.2.0...v1.2.1",
+  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityUI/compare/v1.2.1...v1.2.2",
   "licensesUrl": "",
   "dependencies": {
-    "com.calluna.core": "1.0.6",
+    "com.calluna.core": "1.0.9",
     "com.calluna.di": "1.0.2"
   },
   "samples": [
@@ -22,6 +22,11 @@
       "displayName": "Dragable UI",
       "description": "Example of dragable UI elements",
       "path": "Samples~/DragableUI"
+    },
+    {
+      "displayName": "Advanced UI",
+      "description": "Example of advanced UI elements like rolling number text",
+      "path": "Samples~/AdvancedUI"
     }
   ],
   "keywords": [
