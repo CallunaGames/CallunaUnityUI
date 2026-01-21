@@ -236,6 +236,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _button: {fileID: 1747223681}
   valueRange: {x: 10, y: 100}
+  _floatRollingNumber: {fileID: 1722020854}
+  _intRollingNumber: {fileID: 40582044}
 --- !u!1 &40582040
 GameObject:
   m_ObjectHideFlags: 0
@@ -247,9 +249,7 @@ GameObject:
   - component: {fileID: 40582041}
   - component: {fileID: 40582043}
   - component: {fileID: 40582042}
-  - component: {fileID: 40582045}
   - component: {fileID: 40582044}
-  - component: {fileID: 40582046}
   m_Layer: 5
   m_Name: RollingInt
   m_TagString: Untagged
@@ -384,39 +384,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 40582040}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 126009c06d7b3ff4bb30ca392d23149f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &40582045
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 40582040}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 06988e4e5e283e74fb11ee675f8534e6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _monoInstallers:
-  - {fileID: 40582044}
-  _scriptableObjectInstallers: []
---- !u!114 &40582046
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 40582040}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4ce6d52b2bba06645b72bfc94ce1e829, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _text: {fileID: 40582042}
   _duration: 0.33
-  _rollOnStart: 0
 --- !u!1 &367131374
 GameObject:
   m_ObjectHideFlags: 0
@@ -1054,8 +1026,6 @@ GameObject:
   - component: {fileID: 1722020849}
   - component: {fileID: 1722020851}
   - component: {fileID: 1722020850}
-  - component: {fileID: 1722020853}
-  - component: {fileID: 1722020852}
   - component: {fileID: 1722020854}
   m_Layer: 5
   m_Name: RollingFloat
@@ -1182,33 +1152,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1722020848}
   m_CullTransparentMesh: 1
---- !u!114 &1722020852
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1722020848}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8444c40aa6344a94bdaf8ffd362e0c67, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1722020853
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1722020848}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 06988e4e5e283e74fb11ee675f8534e6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _monoInstallers:
-  - {fileID: 1722020852}
-  _scriptableObjectInstallers: []
 --- !u!114 &1722020854
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1223,7 +1166,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _text: {fileID: 1722020850}
   _duration: 1
-  _rollOnStart: 1
 --- !u!1 &1747223680
 GameObject:
   m_ObjectHideFlags: 0

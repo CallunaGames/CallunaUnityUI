@@ -8,6 +8,8 @@ namespace Calluna.UI.Samples.AdvancedUI
     {
         [SerializeField] private Button _button;
         [SerializeField] private Vector2 valueRange = new Vector2(10, 100);
+        [SerializeField] private FloatRollingNumber _floatRollingNumber;
+        [SerializeField] private IntRollingNumber _intRollingNumber;
 
         private Observable<int> _observableInt;
         private Observable<float> _observableFloat;
@@ -21,6 +23,14 @@ namespace Calluna.UI.Samples.AdvancedUI
         public void Initialize()
         {
             _button.onClick.AddListener(OnClick);
+            _floatRollingNumber.WithEase(Tween.EaseInCubic)
+                .WithValue(_observableFloat)
+                .WithFormat(v => v.ToString("F2"))
+                .Init();
+            _intRollingNumber.WithEase(Tween.EaseInBack)
+                .WithValue(_observableInt)
+                .WithFormat(v => v.ToString("F0"))
+                .Init();
         }
 
         public void Clean()

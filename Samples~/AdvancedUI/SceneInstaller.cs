@@ -1,5 +1,4 @@
 using Calluna.DI;
-using UnityEngine;
 
 namespace Calluna.UI.Samples.AdvancedUI
 {
@@ -9,6 +8,9 @@ namespace Calluna.UI.Samples.AdvancedUI
         {
             binder.Bind<ReadonlyObservable<int>>().And<Observable<int>>().ToNew<Observable<int>>().AsSingle();
             binder.Bind<ReadonlyObservable<float>>().And<Observable<float>>().ToNew<Observable<float>>().AsSingle();
+            binder.BindComponent<CoroutineHelper>()
+                .FromNewComponentOnNewGameObject("CoroutineHelper", transform)
+                .AsSingle();
         }
     }
 }
