@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Calluna.UI
 {
-    public abstract class RollingNumber<T> : MonoBehaviour, Injectable, Initializable, Cleanable
+    public abstract class RollingNumber<T> : MonoBehaviour, Injectable, Cleanable
     {
         [SerializeField] private TextMeshProUGUI _text;
         [SerializeField] private float _duration = 0.33f;
@@ -23,6 +23,8 @@ namespace Calluna.UI
         void Injectable.Inject(Resolver resolver)
         {
             _coroutineHelper = resolver.Resolve<CoroutineHelper>();
+            _id = GetInstanceID().ToString();
+            _currentDuration = _duration;
         }
 
         public RollingNumber<T> WithValue(ReadonlyObservable<T> value)
@@ -66,12 +68,6 @@ namespace Calluna.UI
                 throw new InvalidOperationException("Failed to init. Please set a value.");
             _currentValue = _value.Value;
             _coroutineHelper.StartWithID(Roll(_rollOnInit ? _currentDuration : 0f), _id);
-        }
-
-        void Initializable.Initialize()
-        {
-            _id = GetInstanceID().ToString();
-            _currentDuration = _duration;
         }
 
         void Cleanable.Clean()
