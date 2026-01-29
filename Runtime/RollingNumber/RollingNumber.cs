@@ -106,6 +106,8 @@ namespace Calluna.UI
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
+            
+            UpdateText(_value.Value);
         }
 
         private void UpdateText(T value)
