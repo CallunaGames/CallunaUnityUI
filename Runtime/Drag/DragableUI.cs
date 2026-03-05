@@ -12,6 +12,7 @@ namespace Calluna.UI
 
         private RectTransform _transform;
         private RectTransform _boundsTransform;
+        private RectTransform.Axis? _moveAxis;
         private Rect? _bounds;
 
         void Injectable.Inject(Resolver resolver)
@@ -19,6 +20,7 @@ namespace Calluna.UI
             Arguments args = resolver.Resolve<Arguments>();
             _transform = args.TransformToDrag;
             _boundsTransform = args.Bounds;
+            _moveAxis = args.MoveAxis;
         }
 
         void IBeginDragHandler.OnBeginDrag(PointerEventData eventData)
@@ -35,7 +37,9 @@ namespace Calluna.UI
         {
             if (eventData.button != PointerEventData.InputButton.Left)
                 return;
-            Vector2 delta = eventData.delta;
+            Vector2 delta = new Vector2(
+                _moveAxis is null or RectTransform.Axis.Horizontal ? eventData.delta.x : 0,
+                _moveAxis is null or RectTransform.Axis.Vertical ? eventData.delta.y : 0);
             _transform.position = LimitToBounds(_transform.position + new Vector3(delta.x, delta.y));
         }
 
@@ -83,6 +87,7 @@ namespace Calluna.UI
         {
             public RectTransform TransformToDrag;
             public RectTransform Bounds;
+            public RectTransform.Axis? MoveAxis;
         }
     }
 }
