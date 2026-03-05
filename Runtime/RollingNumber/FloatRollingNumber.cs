@@ -6,7 +6,7 @@ namespace Calluna.UI
     {
         protected override float GetCurrentValue(float startValue, float targetValue, float t)
         {
-            return ((targetValue - startValue) * t + startValue);
+            return Mathf.Lerp(startValue, targetValue, t);
         }
     }
 }

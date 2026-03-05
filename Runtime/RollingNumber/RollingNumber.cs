@@ -6,37 +6,74 @@ using UnityEngine;
 
 namespace Calluna.UI
 {
-    public abstract class RollingNumber<T> : MonoBehaviour, Injectable, Initializable, Cleanable
+    public abstract class RollingNumber<T> : MonoBehaviour, Injectable, Cleanable
     {
         [SerializeField] private TextMeshProUGUI _text;
         [SerializeField] private float _duration = 0.33f;
-        [SerializeField] private bool _rollOnStart = false;
 
+        private CoroutineHelper _coroutineHelper;
         private ReadonlyObservable<T> _value;
-        private Func<float, float> _easeFunction;
-        private Func<T, string> _formatValueAction;
+        private Func<float, float> _easeFunction = f => f;
+        private Func<T, string> _formatValueFunction = f => f.ToString();
         private T _currentValue;
-        private Coroutine _routine;
-        
-        public void Inject(Resolver resolver)
+        private string _id;
+        private bool _rollOnInit;
+        private float _currentDuration;
+
+        void Injectable.Inject(Resolver resolver)
         {
-            Arguments arguments = resolver.Resolve<Arguments>();
-            _value = arguments.Value;
-            _easeFunction = arguments.EaseFunction;
-            _formatValueAction = arguments.FormatValueAction;
-            _currentValue = _value.Value;
+            _coroutineHelper = resolver.Resolve<CoroutineHelper>();
+            _id = GetInstanceID().ToString();
+            _currentDuration = _duration;
         }
-        
-        public void Initialize()
+
+        public RollingNumber<T> WithValue(ReadonlyObservable<T> value)
         {
+            if (_value != null)
+                _value.OnChanged -= OnValueChanged;
+
+            _value = value;
             _value.OnChanged += OnValueChanged;
             _currentValue = _value.Value;
-            _routine = StartCoroutine(Roll(_rollOnStart ? _duration : 0f));
+            return this;
         }
 
-        public void Clean()
+        public RollingNumber<T> WithFormat(Func<T, string> formatFunction)
         {
-            _value.OnChanged -= OnValueChanged;
+            _formatValueFunction = formatFunction;
+            return this;
+        }
+
+        public RollingNumber<T> WithEase(Func<float, float> easeFunction)
+        {
+            _easeFunction = easeFunction;
+            return this;
+        }
+
+        public RollingNumber<T> WithRollOnInit(bool roll = true)
+        {
+            _rollOnInit = roll;
+            return this;
+        }
+
+        public RollingNumber<T> WithDuration(float duration)
+        {
+            _currentDuration = duration;
+            return this;
+        }
+
+        public void Init()
+        {
+            if (_value == null)
+                throw new InvalidOperationException("Failed to init. Please set a value.");
+            _currentValue = _value.Value;
+            _coroutineHelper.StartWithID(Roll(_rollOnInit ? _currentDuration : 0f), _id);
+        }
+
+        void Cleanable.Clean()
+        {
+            if (_value != null)
+                _value.OnChanged -= OnValueChanged;
         }
 
         protected void Reset()
@@ -46,13 +83,7 @@ namespace Calluna.UI
 
         private void OnValueChanged()
         {
-            if (_routine != null)
-            {
-                StopCoroutine(_routine);
-                _routine = null;
-            }
-
-            _routine = StartCoroutine(Roll(_duration));
+            _coroutineHelper.ReplaceWithID(Roll(_currentDuration), _id);
         }
 
         private IEnumerator Roll(float duration)
@@ -75,20 +106,15 @@ namespace Calluna.UI
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
+            
+            UpdateText(_value.Value);
         }
 
         private void UpdateText(T value)
         {
-            _text.text = _formatValueAction(value);
+            _text.text = _formatValueFunction(value);
         }
 
         protected abstract T GetCurrentValue(T startValue, T targetValue, float t);
-
-        public class Arguments
-        {
-            public Func<T, string> FormatValueAction = v => v.ToString();
-            public Func<float, float> EaseFunction = f => f;
-            public ReadonlyObservable<T> Value;
-        }
     }
 }
