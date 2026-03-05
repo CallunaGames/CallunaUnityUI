@@ -482,6 +482,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _dragableTransform: {fileID: 440378914}
   _bounds: {fileID: 330507410}
+  _boundTransform: {fileID: 0}
   _limitAxis: 1
   _moveAxis: 0
 --- !u!114 &440378917
@@ -617,6 +618,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _dragableTransform: {fileID: 770405400}
   _bounds: {fileID: 330507410}
+  _boundTransform: {fileID: 0}
   _limitAxis: 1
   _moveAxis: 1
 --- !u!114 &770405403
@@ -1114,6 +1116,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _dragableTransform: {fileID: 1415412419}
   _bounds: {fileID: 330507410}
+  _boundTransform: {fileID: 1000006273}
   _limitAxis: 0
   _moveAxis: 0
 --- !u!114 &1415412421
@@ -1237,6 +1240,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _dragableTransform: {fileID: 1421141801}
   _bounds: {fileID: 330507410}
+  _boundTransform: {fileID: 0}
   _limitAxis: 0
   _moveAxis: 0
 --- !u!114 &1421141803
@@ -1373,6 +1377,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _dragableTransform: {fileID: 1703171494}
   _bounds: {fileID: 0}
+  _boundTransform: {fileID: 0}
   _limitAxis: 0
   _moveAxis: 0
 --- !u!114 &1703171496

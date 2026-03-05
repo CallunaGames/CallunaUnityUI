@@ -12,6 +12,7 @@ namespace Calluna.UI
 
         private RectTransform _transform;
         private RectTransform _boundsTransform;
+        private RectTransform _boundTransform;
         private RectTransform.Axis? _moveAxis;
         private Rect? _bounds;
 
@@ -20,6 +21,7 @@ namespace Calluna.UI
             Arguments args = resolver.Resolve<Arguments>();
             _transform = args.TransformToDrag;
             _boundsTransform = args.Bounds;
+            _boundTransform = args.BoundTransform == null ? args.TransformToDrag : args.BoundTransform;
             _moveAxis = args.MoveAxis;
         }
 
@@ -40,19 +42,20 @@ namespace Calluna.UI
             Vector2 delta = new Vector2(
                 _moveAxis is null or RectTransform.Axis.Horizontal ? eventData.delta.x : 0,
                 _moveAxis is null or RectTransform.Axis.Vertical ? eventData.delta.y : 0);
-            _transform.position = LimitToBounds(_transform.position + new Vector3(delta.x, delta.y));
+            _transform.position += (Vector3)LimitToBounds(new Vector2(delta.x, delta.y));
         }
 
-        private Vector2 LimitToBounds(Vector2 position)
+        private Vector2 LimitToBounds(Vector2 delta)
         {
             _bounds = GetBoundsRect();
 
             if (!_bounds.HasValue)
-                return position;
+                return delta;
             
-            Rect rect = _transform.rect;
-            Vector2 pivot = _transform.pivot;
-            Vector2 scale = _transform.lossyScale;
+            Vector2 position = (Vector2)_boundTransform.position + delta;
+            Rect rect = _boundTransform.rect;
+            Vector2 pivot = _boundTransform.pivot;
+            Vector2 scale = _boundTransform.lossyScale;
             Vector2 size = rect.size * scale;
             float minX = position.x - size.x * pivot.x;
             float maxX = position.x + size.x * (1 - pivot.x);
@@ -70,7 +73,7 @@ namespace Calluna.UI
             Vector2 deltaMin = new Vector2(deltaMinX, deltaMinY);
             Vector2 deltaMax = new Vector2(deltaMaxX, deltaMaxY);
 
-            return position - deltaMin - deltaMax;
+            return delta - deltaMin - deltaMax;
         }
 
         private Rect? GetBoundsRect()
@@ -87,6 +90,7 @@ namespace Calluna.UI
         {
             public RectTransform TransformToDrag;
             public RectTransform Bounds;
+            public RectTransform BoundTransform;
             public RectTransform.Axis? MoveAxis;
         }
     }
