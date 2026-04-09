@@ -12,12 +12,16 @@ namespace Calluna.UI
 
         private RectTransform _transform;
         private RectTransform _boundsTransform;
+        private RectTransform _boundTransform;
+        private RectTransform.Axis? _moveAxis;
 
         void Injectable.Inject(Resolver resolver)
         {
             Arguments args = resolver.Resolve<Arguments>();
             _transform = args.TransformToDrag;
             _boundsTransform = args.Bounds;
+            _boundTransform = args.BoundTransform == null ? args.TransformToDrag : args.BoundTransform;
+            _moveAxis = args.MoveAxis;
         }
 
         void IBeginDragHandler.OnBeginDrag(PointerEventData eventData)
@@ -34,18 +38,22 @@ namespace Calluna.UI
         {
             if (eventData.button != PointerEventData.InputButton.Left)
                 return;
-            Vector2 delta = eventData.delta;
-            _transform.position = LimitToBounds(_transform.position + new Vector3(delta.x, delta.y));
+            Vector2 delta = new Vector2(
+                _moveAxis is null or RectTransform.Axis.Horizontal ? eventData.delta.x : 0,
+                _moveAxis is null or RectTransform.Axis.Vertical ? eventData.delta.y : 0);
+            _transform.position += (Vector3)LimitToBounds(delta);
         }
 
-        private Vector2 LimitToBounds(Vector2 position)
+        private Vector2 LimitToBounds(Vector2 delta)
         {
             Rect? boundsNullable = GetBoundsRect();
             if (!boundsNullable.HasValue)
-                return position;
+                return delta;
 
-            Vector2 size = _transform.rect.size * (Vector2)_transform.lossyScale;
-            return ClampPositionToBounds(position, size, _transform.pivot, boundsNullable.Value);
+            Vector2 size = _boundTransform.rect.size * (Vector2)_boundTransform.lossyScale;
+            Vector2 prospectivePosition = (Vector2)_boundTransform.position + delta;
+            Vector2 clampedPosition = ClampPositionToBounds(prospectivePosition, size, _boundTransform.pivot, boundsNullable.Value);
+            return clampedPosition - (Vector2)_boundTransform.position;
         }
 
         // Pure geometry — no Unity object access. Testable without a RectTransform.
@@ -80,6 +88,8 @@ namespace Calluna.UI
         {
             public RectTransform TransformToDrag;
             public RectTransform Bounds;
+            public RectTransform BoundTransform;
+            public RectTransform.Axis? MoveAxis;
         }
     }
 }

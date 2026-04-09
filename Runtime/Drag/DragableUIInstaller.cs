@@ -7,6 +7,9 @@ namespace Calluna.UI
     {
         [SerializeField] private RectTransform _dragableTransform;
         [SerializeField, Header("Optional")] private RectTransform _bounds;
+        [SerializeField] private RectTransform _boundTransform;
+        [SerializeField] private bool _limitAxis;
+        [SerializeField] private RectTransform.Axis _moveAxis;
 
         public override void InstallBindings(Binder binder)
         {
@@ -14,7 +17,9 @@ namespace Calluna.UI
                 new DragableUI.Arguments()
                 {
                     TransformToDrag = _dragableTransform,
-                    Bounds = _bounds
+                    Bounds = _bounds,
+                    MoveAxis = _limitAxis ? _moveAxis : null,
+                    BoundTransform = _boundTransform
                 });
         }
     }
