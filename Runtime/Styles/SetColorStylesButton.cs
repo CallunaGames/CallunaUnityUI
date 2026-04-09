@@ -1,4 +1,3 @@
-using System;
 using Calluna.DI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,17 +11,17 @@ namespace Calluna.UI
 
         private Observable<ColorStyleSettings> _observableSettings;
         
-        public void Inject(Resolver resolver)
+        void Injectable.Inject(Resolver resolver)
         {
             _observableSettings = resolver.Resolve<Observable<ColorStyleSettings>>();
         }
 
-        public void Initialize()
+        void Initializable.Initialize()
         {
             _button.onClick.AddListener(SetStyle);
         }
 
-        public void Clean()
+        void Cleanable.Clean()
         {
             _button.onClick.RemoveListener(SetStyle);
         }
@@ -34,7 +33,9 @@ namespace Calluna.UI
 
         private void SetStyle()
         {
-            if(_observableSettings.Value != _colorStyleSettings)
+            // ScriptableObject identity is used intentionally: Unity always returns the same
+            // asset reference, so reference equality is equivalent to "same theme".
+            if (_observableSettings.Value != _colorStyleSettings)
                 _observableSettings.Value = _colorStyleSettings;
         }
     }

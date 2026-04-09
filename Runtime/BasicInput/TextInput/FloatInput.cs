@@ -1,17 +1,8 @@
-﻿using System;
-
-namespace Calluna.UI
+﻿namespace Calluna.UI
 {
     public class FloatInput : TextInput<float>
     {
-        protected override float ParseInput(string input)
-        {
-            if (!float.TryParse(input, out float result))
-            {
-                throw new ArgumentException();
-            }
-
-            return result;
-        }
+        protected override bool TryParseInput(string input, out float result)
+            => float.TryParse(input, out result);
     }
 }

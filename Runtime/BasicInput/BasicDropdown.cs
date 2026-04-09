@@ -1,4 +1,4 @@
-using System.Linq;
+using System.Collections.Generic;
 using Calluna.DI;
 using TMPro;
 using UnityEngine;
@@ -11,42 +11,45 @@ namespace Calluna.UI
 
         private ReadonlyObservableList<TMP_Dropdown.OptionData> _options;
         private ObservableListChangeDetector<TMP_Dropdown.OptionData> _optionChangeDetector;
-        private bool _areOptionsDirty = false;
+        private bool _areOptionsDirty;
         private TMP_Dropdown.OptionData _selectedOption;
-        private ReadonlyObservable<int> _index;
+        private List<TMP_Dropdown.OptionData> _optionsBuffer;
 
         private void Reset()
         {
             _dropdown = GetComponent<TMP_Dropdown>();
         }
 
-        public override void Inject(Resolver resolver)
+        protected override void OnInject(Resolver resolver)
         {
-            base.Inject(resolver);
+            base.OnInject(resolver);
             _options = resolver.Resolve<ReadonlyObservableList<TMP_Dropdown.OptionData>>();
-            _index = resolver.Resolve<ReadonlyObservable<int>>();
             _optionChangeDetector = new ObservableListChangeDetector<TMP_Dropdown.OptionData>(_options);
+            _optionsBuffer = new List<TMP_Dropdown.OptionData>();
         }
 
         private void Update()
         {
             if (_areOptionsDirty)
-            {
-                _areOptionsDirty = false;
-                UpdateOptions();
-            }
+                FlushDirtyOptions();
         }
 
-        public override void Initialize()
+        internal void FlushDirtyOptions()
         {
-            base.Initialize();
+            _areOptionsDirty = false;
+            UpdateOptions();
+        }
+
+        protected override void OnInitialize()
+        {
+            base.OnInitialize();
             _optionChangeDetector.OnChanged += SetOptionsDirty;
             UpdateOptions();
         }
 
-        public override void Clean()
+        protected override void OnClean()
         {
-            base.Clean();
+            base.OnClean();
             _optionChangeDetector.OnChanged -= SetOptionsDirty;
             _optionChangeDetector.Dispose();
         }
@@ -74,9 +77,11 @@ namespace Calluna.UI
 
         private void UpdateOptions()
         {
+            _optionsBuffer.Clear();
+            _optionsBuffer.AddRange(_options);
             _dropdown.ClearOptions();
-            _dropdown.AddOptions(_options.ToList());
-            _dropdown.SetValueWithoutNotify(_index.Value);
+            _dropdown.AddOptions(_optionsBuffer);
+            _dropdown.SetValueWithoutNotify(_observableValue.Value);
             UpdateShownOptions();
             UpdateSelectedIndex();
         }
@@ -91,12 +96,14 @@ namespace Calluna.UI
 
         private void UpdateSelectedIndex()
         {
-            int index = GetIndex();
-            if(index != _index.Value)
+            int index = GetSelectedIndex();
+            if(index != _observableValue.Value)
                 SetValue(index);
         }
 
-        private int GetIndex()
+        // After a list rebuild, recover the previously selected option by identity.
+        // If it no longer exists in the new list, fall back to index 0 (or -1 if the list is empty).
+        private int GetSelectedIndex()
         {
             if(_selectedOption == null)
                 return _options.Count > 0 ? 0 : -1;

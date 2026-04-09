@@ -12,7 +12,7 @@ namespace Calluna.UI
         private ReadonlyObservable<ColorStyleSettings> _styleSettings;
         private Color _initialColor;
 
-        public void Inject(Resolver resolver)
+        void Injectable.Inject(Resolver resolver)
         {
             _styleSettings = resolver.Resolve<ReadonlyObservable<ColorStyleSettings>>();
         }
@@ -22,14 +22,14 @@ namespace Calluna.UI
             _graphic = GetComponent<Graphic>();
         }
 
-        public void Initialize()
+        void Initializable.Initialize()
         {
             _initialColor = _graphic.color;
             _styleSettings.OnChanged += UpdateColor;
             UpdateColor();
         }
 
-        public void Clean()
+        void Cleanable.Clean()
         {
             _styleSettings.OnChanged -= UpdateColor;
         }

@@ -12,7 +12,6 @@ namespace Calluna.UI
 
         private RectTransform _transform;
         private RectTransform _boundsTransform;
-        private Rect? _bounds;
 
         void Injectable.Inject(Resolver resolver)
         {
@@ -41,32 +40,30 @@ namespace Calluna.UI
 
         private Vector2 LimitToBounds(Vector2 position)
         {
-            _bounds = GetBoundsRect();
-
-            if (!_bounds.HasValue)
+            Rect? boundsNullable = GetBoundsRect();
+            if (!boundsNullable.HasValue)
                 return position;
-            
-            Rect rect = _transform.rect;
-            Vector2 pivot = _transform.pivot;
-            Vector2 scale = _transform.lossyScale;
-            Vector2 size = rect.size * scale;
+
+            Vector2 size = _transform.rect.size * (Vector2)_transform.lossyScale;
+            return ClampPositionToBounds(position, size, _transform.pivot, boundsNullable.Value);
+        }
+
+        // Pure geometry — no Unity object access. Testable without a RectTransform.
+        // Computes how far each edge of the element overshoots the bounds and subtracts
+        // those overflows from the position to push it back inside.
+        internal static Vector2 ClampPositionToBounds(Vector2 position, Vector2 size, Vector2 pivot, Rect bounds)
+        {
             float minX = position.x - size.x * pivot.x;
             float maxX = position.x + size.x * (1 - pivot.x);
             float minY = position.y - size.y * pivot.y;
             float maxY = position.y + size.y * (1 - pivot.y);
-            Vector2 min = new Vector2(minX, minY);
-            Vector2 max = new Vector2(maxX, maxY);
 
-            Rect bounds = _bounds.Value;
-            float deltaMinX = min.x < bounds.min.x ? min.x - bounds.min.x : 0;
-            float deltaMinY = min.y < bounds.min.y ? min.y - bounds.min.y : 0;
-            float deltaMaxX = max.x > bounds.max.x ? max.x - bounds.max.x : 0;
-            float deltaMaxY = max.y > bounds.max.y ? max.y - bounds.max.y : 0;
+            float deltaMinX = minX < bounds.min.x ? minX - bounds.min.x : 0;
+            float deltaMinY = minY < bounds.min.y ? minY - bounds.min.y : 0;
+            float deltaMaxX = maxX > bounds.max.x ? maxX - bounds.max.x : 0;
+            float deltaMaxY = maxY > bounds.max.y ? maxY - bounds.max.y : 0;
 
-            Vector2 deltaMin = new Vector2(deltaMinX, deltaMinY);
-            Vector2 deltaMax = new Vector2(deltaMaxX, deltaMaxY);
-
-            return position - deltaMin - deltaMax;
+            return position - new Vector2(deltaMinX, deltaMinY) - new Vector2(deltaMaxX, deltaMaxY);
         }
 
         private Rect? GetBoundsRect()

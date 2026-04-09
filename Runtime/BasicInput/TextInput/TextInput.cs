@@ -13,9 +13,9 @@ namespace Calluna.UI
         
         private CultureInfo _cultureInfo;
 
-        public override void Inject(Resolver resolver)
+        protected override void OnInject(Resolver resolver)
         {
-            base.Inject(resolver);
+            base.OnInject(resolver);
             _cultureInfo = resolver.ResolveOptional<CultureInfo>() ?? CultureInfo.InvariantCulture;
         }
 
@@ -26,7 +26,7 @@ namespace Calluna.UI
         
         protected override void UpdateInput(TValue value)
         {
-            _inputField.text = ParseValue(value);
+            _inputField.SetTextWithoutNotify(FormatValue(value));
         }
 
         protected override void AddInputListener()
@@ -39,17 +39,25 @@ namespace Calluna.UI
             _inputField.onValueChanged.RemoveListener(SetValue);
         }
         
-        protected abstract TValue ParseInput(string input);
+        protected abstract bool TryParseInput(string input, out TValue result);
 
-        private void SetValue(string inputValue)
+        private void SetValue(string input)
         {
-            SetValue(ParseInput(inputValue));
+            if (TryParseInput(input, out TValue result))
+                SetValue(result);
+            else
+                OnParseFailure(input);
         }
 
-        private string ParseValue(TValue value)
+        protected virtual void OnParseFailure(string input)
         {
-            if(value is IFormattable formattable)
-                _inputField.SetTextWithoutNotify(formattable.ToString(_format, _cultureInfo));
+            Debug.LogWarning($"{GetType().Name}: Could not parse input \"{input}\" as {typeof(TValue).Name}.", this);
+        }
+
+        private string FormatValue(TValue value)
+        {
+            if (value is IFormattable formattable)
+                return formattable.ToString(_format, _cultureInfo);
             return value?.ToString();
         }
     }

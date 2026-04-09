@@ -2,9 +2,10 @@ namespace Calluna.UI
 {
     public class StringInput : TextInput<string>
     {
-        protected override string ParseInput(string input)
+        protected override bool TryParseInput(string input, out string result)
         {
-            return input;
+            result = input;
+            return true;
         }
     }
 }

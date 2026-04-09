@@ -1,17 +1,8 @@
-using System;
-
 namespace Calluna.UI
 {
     public class IntInput : TextInput<int>
     {
-        protected override int ParseInput(string input)
-        {
-            if (!int.TryParse(input, out int result))
-            {
-                throw new ArgumentException();
-            }
-
-            return result;
-        }
+        protected override bool TryParseInput(string input, out int result)
+            => int.TryParse(input, out result);
     }
 }

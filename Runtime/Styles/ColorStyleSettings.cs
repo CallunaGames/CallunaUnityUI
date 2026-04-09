@@ -12,11 +12,17 @@ namespace Calluna.UI
 
         public Color GetColorOf(ColorStyleId style)
         {
-            ColorStyleSetting setting = _settings.FirstOrDefault(s => s.Style == style);
-            if(setting != null)
-                return setting.Color;
+            if (TryGetColorOf(style, out Color color))
+                return color;
             throw new ArgumentException($"There is no color defined for the style '{style}'." +
                                         $"Please open the style settings and see if everything is setup correctly.");
+        }
+
+        public bool TryGetColorOf(ColorStyleId style, out Color color)
+        {
+            ColorStyleSetting setting = _settings.FirstOrDefault(s => s.Style == style);
+            color = setting != null ? setting.Color : default;
+            return setting != null;
         }
 
         [Serializable]

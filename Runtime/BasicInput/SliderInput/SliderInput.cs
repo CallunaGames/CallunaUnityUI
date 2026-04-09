@@ -14,7 +14,7 @@ namespace Calluna.UI
 
         protected override void UpdateInput(TValue value)
         {
-            _slider.SetValueWithoutNotify(ParseValue(value));
+            _slider.SetValueWithoutNotify(ToSliderValue(value));
         }
 
         protected override void AddInputListener()
@@ -26,13 +26,13 @@ namespace Calluna.UI
         {
             _slider.onValueChanged.RemoveListener(SetValue);
         }
-        
-        protected abstract float ParseValue(TValue value);
-        protected abstract TValue ParseInput(float input);
 
-        private void SetValue(float inputValue)
+        protected abstract float ToSliderValue(TValue value);
+        protected abstract TValue FromSliderValue(float sliderValue);
+
+        private void SetValue(float sliderValue)
         {
-            SetValue(ParseInput(inputValue));
+            SetValue(FromSliderValue(sliderValue));
         }
     }
 }

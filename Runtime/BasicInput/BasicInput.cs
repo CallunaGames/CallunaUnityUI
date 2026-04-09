@@ -6,27 +6,31 @@ namespace Calluna.UI
 {
     public abstract class BasicInput<TValue> : MonoBehaviour, Injectable, Initializable, Cleanable
     {
-        private Observable<TValue> _observableValue;
+        protected Observable<TValue> _observableValue;
         
-        public virtual void Inject(Resolver resolver)
+        void Injectable.Inject(Resolver resolver) => OnInject(resolver);
+        void Initializable.Initialize() => OnInitialize();
+        void Cleanable.Clean() => OnClean();
+
+        protected virtual void OnInject(Resolver resolver)
         {
             _observableValue = resolver.Resolve<Observable<TValue>>();
         }
 
-        public virtual void Initialize()
+        protected virtual void OnInitialize()
         {
             _observableValue.OnChanged += UpdateInput;
             UpdateInput(_observableValue.Value);
             AddInputListener();
         }
 
-        public virtual void Clean()
+        protected virtual void OnClean()
         {
             _observableValue.OnChanged -= UpdateInput;
             RemoveInputListener();
         }
 
-        protected void SetValue(TValue value)
+        protected virtual void SetValue(TValue value)
         {
             _observableValue.Value = value;
         }
@@ -35,6 +39,7 @@ namespace Calluna.UI
         protected abstract void AddInputListener();
         protected abstract void RemoveInputListener();
 
+        // Bridge overload: matches the parameterless OnChanged delegate signature.
         private void UpdateInput()
         {
             UpdateInput(_observableValue.Value);

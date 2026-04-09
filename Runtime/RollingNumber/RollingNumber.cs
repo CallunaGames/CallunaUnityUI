@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Calluna.UI
 {
-    public abstract class RollingNumber<T> : MonoBehaviour, Injectable, Cleanable
+    public abstract class RollingNumber<T> : MonoBehaviour, Injectable, Initializable, Cleanable
     {
         [SerializeField] private TextMeshProUGUI _text;
         [SerializeField] private float _duration = 0.33f;
@@ -14,16 +14,17 @@ namespace Calluna.UI
         private CoroutineHelper _coroutineHelper;
         private ReadonlyObservable<T> _value;
         private Func<float, float> _easeFunction = f => f;
-        private Func<T, string> _formatValueFunction = f => f.ToString();
+        private Func<T, string> _formatValue = f => f is IFormattable fmt ? fmt.ToString(null, null) : f?.ToString() ?? string.Empty;
         private T _currentValue;
-        private string _id;
-        private bool _rollOnInit;
+        private string _coroutineId;
+        private bool _shouldRollOnInit;
         private float _currentDuration;
+        private RollingNumberAnimator<T> _animator;
 
         void Injectable.Inject(Resolver resolver)
         {
             _coroutineHelper = resolver.Resolve<CoroutineHelper>();
-            _id = GetInstanceID().ToString();
+            _coroutineId = GetInstanceID().ToString();
             _currentDuration = _duration;
         }
 
@@ -40,7 +41,7 @@ namespace Calluna.UI
 
         public RollingNumber<T> WithFormat(Func<T, string> formatFunction)
         {
-            _formatValueFunction = formatFunction;
+            _formatValue = formatFunction;
             return this;
         }
 
@@ -52,7 +53,7 @@ namespace Calluna.UI
 
         public RollingNumber<T> WithRollOnInit(bool roll = true)
         {
-            _rollOnInit = roll;
+            _shouldRollOnInit = roll;
             return this;
         }
 
@@ -62,12 +63,19 @@ namespace Calluna.UI
             return this;
         }
 
+        void Initializable.Initialize()
+        {
+            if (_value != null)
+                Init();
+        }
+
         public void Init()
         {
             if (_value == null)
                 throw new InvalidOperationException("Failed to init. Please set a value.");
+            _animator = new RollingNumberAnimator<T>(GetCurrentValue, _easeFunction, _formatValue);
             _currentValue = _value.Value;
-            _coroutineHelper.StartWithID(Roll(_rollOnInit ? _currentDuration : 0f), _id);
+            _coroutineHelper.StartWithID(Roll(_shouldRollOnInit ? _currentDuration : 0f), _coroutineId);
         }
 
         void Cleanable.Clean()
@@ -83,7 +91,7 @@ namespace Calluna.UI
 
         private void OnValueChanged()
         {
-            _coroutineHelper.ReplaceWithID(Roll(_currentDuration), _id);
+            _coroutineHelper.ReplaceWithID(Roll(_currentDuration), _coroutineId);
         }
 
         private IEnumerator Roll(float duration)
@@ -95,24 +103,24 @@ namespace Calluna.UI
                 yield break;
             }
 
-            float elapsedTime = 0f;
+            float elapsed = 0f;
             T startValue = _currentValue;
-            while (elapsedTime < duration)
+            while (elapsed < duration)
             {
-                float t = elapsedTime / duration;
-                t = _easeFunction(t);
-                _currentValue = GetCurrentValue(startValue, _value.Value, t);
+                _currentValue = _animator.Step(startValue, _value.Value, elapsed, duration);
                 UpdateText(_currentValue);
-                elapsedTime += Time.deltaTime;
+                elapsed += GetDeltaTime();
                 yield return null;
             }
-            
+
             UpdateText(_value.Value);
         }
 
-        private void UpdateText(T value)
+        protected virtual float GetDeltaTime() => Time.deltaTime;
+
+        protected virtual void UpdateText(T value)
         {
-            _text.text = _formatValueFunction(value);
+            _text.text = _animator.Format(value);
         }
 
         protected abstract T GetCurrentValue(T startValue, T targetValue, float t);

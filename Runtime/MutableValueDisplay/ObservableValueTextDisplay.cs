@@ -14,7 +14,7 @@ namespace Calluna.UI
         private ReadonlyObservable<TValue> _value;
         private CultureInfo _cultureInfo;
 
-        public void Inject(Resolver resolver)
+        void Injectable.Inject(Resolver resolver)
         {
             _value = resolver.Resolve<ReadonlyObservable<TValue>>();
             _cultureInfo = resolver.ResolveOptional<CultureInfo>() ?? CultureInfo.InvariantCulture;
@@ -25,23 +25,23 @@ namespace Calluna.UI
             _text = GetComponentInChildren<TextMeshProUGUI>();
         }
 
-        public void Initialize()
+        void Initializable.Initialize()
         {
             _value.OnChanged += UpdateText;
             UpdateText();
         }
 
-        public void Clean()
+        void Cleanable.Clean()
         {
             _value.OnChanged -= UpdateText;
         }
 
-        private void UpdateText()
+        protected virtual void UpdateText()
         {
             _text.text = GetText();
         }
 
-        private string GetText()
+        protected virtual string GetText()
         {
             TValue value = _value.Value;
             if (value is IFormattable formattable)

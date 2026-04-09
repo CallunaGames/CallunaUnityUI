@@ -10,7 +10,7 @@ namespace Calluna.UI
 
         private ReadonlyObservable<float> _progress;
 
-        public void Inject(Resolver resolver)
+        void Injectable.Inject(Resolver resolver)
         {
             _progress = resolver.Resolve<ReadonlyObservable<float>>();
         }
@@ -20,7 +20,7 @@ namespace Calluna.UI
             _slider = GetComponentInChildren<Slider>();
         }
 
-        public void Initialize()
+        void Initializable.Initialize()
         {
             _progress.OnChanged += UpdateSlider;
             _slider.minValue = 0f;
@@ -28,7 +28,7 @@ namespace Calluna.UI
             UpdateSlider();
         }
 
-        public void Clean()
+        void Cleanable.Clean()
         {
             _progress.OnChanged -= UpdateSlider;
         }

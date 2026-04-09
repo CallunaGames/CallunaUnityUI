@@ -10,7 +10,7 @@ namespace Calluna.UI
 
         private ReadonlyObservable<float> _progress;
 
-        public void Inject(Resolver resolver)
+        void Injectable.Inject(Resolver resolver)
         {
             _progress = resolver.Resolve<ReadonlyObservable<float>>();
         }
@@ -20,13 +20,13 @@ namespace Calluna.UI
             _image = GetComponentInChildren<Image>();
         }
 
-        public void Initialize()
+        void Initializable.Initialize()
         {
             _progress.OnChanged += UpdateFillAmount;
             UpdateFillAmount();
         }
 
-        public void Clean()
+        void Cleanable.Clean()
         {
             _progress.OnChanged -= UpdateFillAmount;
         }

@@ -10,19 +10,19 @@ namespace Calluna.UI
 
         private Observable<ColorStyleSettings> _observableSettings;
         
-        public void Inject(Resolver resolver)
+        void Injectable.Inject(Resolver resolver)
         {
             _observableSettings = resolver.Resolve<Observable<ColorStyleSettings>>();
         }
 
-        public void Initialize()
+        void Initializable.Initialize()
         {
-            _button.onClick.AddListener(SetStyle);
+            _button.onClick.AddListener(ClearStyle);
         }
 
-        public void Clean()
+        void Cleanable.Clean()
         {
-            _button.onClick.RemoveListener(SetStyle);
+            _button.onClick.RemoveListener(ClearStyle);
         }
 
         private void Reset()
@@ -30,7 +30,7 @@ namespace Calluna.UI
             _button = GetComponent<Button>();
         }
 
-        private void SetStyle()
+        private void ClearStyle()
         {
             if(_observableSettings.HasValue)
                 _observableSettings.Value = null;

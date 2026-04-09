@@ -2,14 +2,8 @@
 {
     public class IntSlider : SliderInput<int>
     {
-        protected override float ParseValue(int value)
-        {
-            return (float)value;
-        }
+        protected override float ToSliderValue(int value) => (float)value;
 
-        protected override int ParseInput(float input)
-        {
-            return (int)input;
-        }
+        protected override int FromSliderValue(float sliderValue) => (int)sliderValue;
     }
 }
