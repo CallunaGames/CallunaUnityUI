@@ -27,6 +27,11 @@
       "displayName": "Advanced UI",
       "description": "Example of advanced UI elements like rolling number text",
       "path": "Samples~/AdvancedUI"
+    },
+    {
+      "displayName": "Virtual Scroll UI",
+      "description": "Example of a virtualised grid scroll view with live data updates",
+      "path": "Samples~/VirtualScrollUI"
     }
   ],
   "keywords": [
