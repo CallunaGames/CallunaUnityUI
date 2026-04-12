@@ -13,8 +13,8 @@ This Unity package implements a solution for the following common UI problems:
 
 ## Dependencies
 The package is dependant on the following packages. Please make sure to import them via the package manager.
-- [Calluna Core v1.0.3](https://github.com/CallunaGames/CallunaUnityCore)
-- [Calluna DI v.1.0.2](https://github.com/CallunaGames/CallunaUnityDI)
+- [Calluna Core v1.2.0](https://github.com/CallunaGames/CallunaUnityCore)
+- [Calluna DI v1.3.1](https://github.com/CallunaGames/CallunaUnityDI)
 
 ## Features
 ### Value display
@@ -23,10 +23,12 @@ If its value changes the display also changes. The observable value is injected 
 Following value types are supported:
 - float
 - int
-- string 
+- string
+- double
+- long
 
 Following visual representation is implemented:
-- TextMeshProUGUI Texts (`FloatTextDisplay`, `IntTextDisplay`, `StringTextDisplay`)
+- TextMeshProUGUI Texts (`FloatTextDisplay`, `IntTextDisplay`, `StringTextDisplay`, `DoubleTextDisplay`, `LongTextDisplay`)
 - Slider Progress Bar (`ProgressBar`)
 - Fillable Images (`FilledImageProgressDisplay`)
 
@@ -118,22 +120,21 @@ public class ItemGrid : VirtualScrollGrid<ItemCell, ItemData> { }
 
 **Step 4 — Write the installer**
 
+Subclass `VirtualScrollGridInstaller` to get the `IScrollLayout` binding for free. Its serialized `_layoutSettings` field appears in the Inspector automatically. Call `base.InstallBindings(binder)` first, then add the data list binding:
+
 ```csharp
-public class ItemGridInstaller : MonoInstaller
+public class ItemGridInstaller : VirtualScrollGridInstaller
 {
-    [SerializeField] private GridScrollLayout.Settings _layoutSettings;
+    private readonly ObservableList<ItemData> _items = new();
 
     public override void InstallBindings(Binder binder)
     {
-        // Layout strategy
-        binder.Bind<IScrollLayout>()
-              .ToInstance(new GridScrollLayout(_layoutSettings));
+        base.InstallBindings(binder);
 
         // Data list — bind as both mutable and readonly so other systems can write to it
-        var items = new ObservableList<ItemData>();
         binder.Bind<ObservableList<ItemData>>()
               .And<ReadonlyObservableList<ItemData>>()
-              .ToInstance(items);
+              .ToInstance(_items);
     }
 }
 ```
