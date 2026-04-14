@@ -190,8 +190,7 @@ IScrollLayout
     GridScrollLayout(Settings)          — top-to-bottom fixed-column grid
 
 VirtualScrollGridBase<TItem>            — MonoBehaviour, shared scroll/pool/layout logic
-    VirtualScrollGrid<TItem>            — count-only variant; item count from ReadonlyObservable<int>
-    VirtualScrollGrid<TItem, TData>     — data variant; data list from ReadonlyObservableList<TData>
+    VirtualScrollGrid<TItem, TData>     — data list from ReadonlyObservableList<TData>
 ```
 
 `GridScrollLayout` is constructed from a serializable `Settings` struct:
@@ -203,17 +202,11 @@ VirtualScrollGridBase<TItem>            — MonoBehaviour, shared scroll/pool/la
 | `Spacing` | `Vector2` | Gap between cells (horizontal, vertical) |
 | `Padding` | `Padding` | Outer padding (`Top`, `Bottom`, `Left`, `Right`) |
 
-#### Usage — count-only variant
+#### Usage
 
-Use `VirtualScrollGrid<TItem>` when cells are uniform and need no per-item data. Bind a `ReadonlyObservable<int>` for the item count and a `Pool<TItem, PrefabInstantiationArguments>` via `MonoPoolInstaller<TItem>`.
+The grid takes a `ReadonlyObservableList<TData>` as its data source, so it reacts correctly to insertions, removals, and replacements — not just count changes. If cells are uniform and carry no meaningful data, use a lightweight model (e.g. an empty struct or an `int` index) as `TData`.
 
-```csharp
-public class MyGrid : VirtualScrollGrid<MyCell> { }
-```
-
-#### Usage — data variant
-
-Use `VirtualScrollGrid<TItem, TData>` when each cell must display different data. The pool injects the data entry into the cell each time it is activated.
+The pool injects the `TData` entry into each cell as a DI argument on every activation.
 
 **Step 1 — Define the data struct**
 
