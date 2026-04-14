@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace Calluna.UI
 {
     /// <summary>
-    /// Non-generic shared logic for both virtualised grid variants.
+    /// Non-generic shared logic for the virtualised grid.
     /// Handles scroll events, visible-range computation, item placement,
     /// and pool request/return dispatch.
     /// </summary>
@@ -64,6 +64,61 @@ namespace Calluna.UI
 
         protected void SetDirty() => _isDirty = true;
 
+        // ── Fine-grained update helpers ──────────────────────────────────────────
+
+        /// <summary>Resizes the content rect to match the current item count.</summary>
+        protected void ResizeContent()
+            => _contentRect.sizeDelta = _layout.ComputeContentSize(ItemCount);
+
+        /// <summary>
+        /// Returns the active cell at <paramref name="index"/> to the pool and removes it from
+        /// the active set. Does nothing when the index is not active.
+        /// </summary>
+        protected void ReturnActiveItemAt(int index)
+        {
+            if (!_activeItems.TryGetValue(index, out TItem item)) return;
+            ReturnItem(item);
+            _activeItems.Remove(index);
+        }
+
+        /// <summary>
+        /// If the item at <paramref name="index"/> is currently active, returns it to the pool
+        /// and immediately re-requests it so the cell receives fresh data via DI injection.
+        /// Does nothing when the index is not visible.
+        /// </summary>
+        protected void ReplaceActiveItem(int index)
+        {
+            if (!_activeItems.ContainsKey(index)) return;
+            ReturnActiveItemAt(index);
+            ActivateItem(index);
+        }
+
+        /// <summary>
+        /// Re-keys every active item whose index is ≥ <paramref name="fromIndex"/> by
+        /// <paramref name="delta"/> (+1 for insert, −1 for remove) and repositions each one.
+        /// </summary>
+        protected void ShiftActiveItems(int fromIndex, int delta)
+        {
+            _recycleBuffer.Clear();
+            foreach (int key in _activeItems.Keys)
+                if (key >= fromIndex) _recycleBuffer.Add(key);
+
+            // Descending order for positive delta (insert) to avoid key collisions.
+            if (delta > 0)
+                _recycleBuffer.Sort((a, b) => b.CompareTo(a));
+            else
+                _recycleBuffer.Sort();
+
+            foreach (int key in _recycleBuffer)
+            {
+                TItem item = _activeItems[key];
+                _activeItems.Remove(key);
+                int newKey = key + delta;
+                _activeItems[newKey] = item;
+                ((RectTransform)item.transform).anchoredPosition = _layout.ComputeItemPosition(newKey);
+            }
+        }
+
         // ── Unity messages ───────────────────────────────────────────────────────
 
         protected virtual void Reset()
@@ -96,7 +151,11 @@ namespace Calluna.UI
             RefreshVisibleItems();
         }
 
-        private void RefreshVisibleItems()
+        /// <summary>
+        /// Reconciles the active cell set with the current visible index range:
+        /// returns cells that scrolled out of view and activates cells that scrolled in.
+        /// </summary>
+        protected void RefreshVisibleItems()
         {
             (int first, int last) = _layout.GetVisibleIndexRange(ItemCount, GetViewportRect());
 
@@ -115,16 +174,20 @@ namespace Calluna.UI
             for (int i = first; i <= last; i++)
             {
                 if (_activeItems.ContainsKey(i)) continue;
-
-                TItem item = RequestItem(i);
-                var rt = (RectTransform)item.transform;
-                rt.anchorMin        = new Vector2(0f, 1f);
-                rt.anchorMax        = new Vector2(0f, 1f);
-                rt.pivot            = new Vector2(0f, 1f);
-                rt.anchoredPosition = _layout.ComputeItemPosition(i);
-                rt.sizeDelta        = _layout.ItemSize;
-                _activeItems[i]     = item;
+                ActivateItem(i);
             }
+        }
+
+        private void ActivateItem(int index)
+        {
+            TItem item = RequestItem(index);
+            var rt = (RectTransform)item.transform;
+            rt.anchorMin        = new Vector2(0f, 1f);
+            rt.anchorMax        = new Vector2(0f, 1f);
+            rt.pivot            = new Vector2(0f, 1f);
+            rt.anchoredPosition = _layout.ComputeItemPosition(index);
+            rt.sizeDelta        = _layout.ItemSize;
+            _activeItems[index] = item;
         }
 
         private void ReturnAll()

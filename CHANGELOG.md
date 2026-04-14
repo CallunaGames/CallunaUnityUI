@@ -17,6 +17,7 @@
 - `TextInput<TValue>` subclasses no longer throw an unhandled exception when the user types a value that cannot be parsed; the input is silently discarded and a `Debug.LogWarning` is emitted. Override `OnParseFailure(string)` to supply custom error handling.
 
 ### Changed
+- `VirtualScrollGrid<TItem, TData>` now subscribes directly to `ReadonlyObservableList<TData>` events (`OnItemAdded`, `OnItemRemoved`, `OnItemReplaced`, `OnItemsSwapped`) instead of using `ObservableListChangeDetector`. Replacements and swaps refresh only the affected visible cells with no rebuild; insertions and removals shift and reposition active cells, then reconcile the visible range.
 - `BasicDropdown` no longer allocates a new `List` on every option list rebuild; a reusable `_optionsBuffer` is used instead, reducing per-frame GC pressure during dropdown population.
 - `RollingNumber<T>` animation logic has been extracted into an internal `RollingNumberAnimator<T>` to make the pure animation behaviour independently testable.
 - `RollingNumber<T>` default format delegate no longer boxes value types.
