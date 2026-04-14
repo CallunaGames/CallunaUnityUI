@@ -149,7 +149,7 @@ rollingNumber
     .WithEase(EasingFunctions.EaseOutQuad)
     .WithFormat(v => v.ToString("F2"))
     .WithRollOnInit()
-    .Init(); // only needed when DI is not in use
+    .Apply(); // only needed when DI is not in use
 ```
 
 | Builder method | Description |

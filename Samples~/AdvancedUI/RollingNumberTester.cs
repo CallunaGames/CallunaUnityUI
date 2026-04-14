@@ -26,11 +26,11 @@ namespace Calluna.UI.Samples.AdvancedUI
             _floatRollingNumber.WithEase(Tween.EaseInCubic)
                 .WithValue(_observableFloat)
                 .WithFormat(v => v.ToString("F2"))
-                .Init();
+                .Apply();
             _intRollingNumber.WithEase(Tween.EaseInBack)
                 .WithValue(_observableInt)
                 .WithFormat(v => v.ToString("F0"))
-                .Init();
+                .Apply();
         }
 
         public void Clean()

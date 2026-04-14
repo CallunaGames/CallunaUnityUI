@@ -20,6 +20,7 @@ namespace Calluna.UI
         private bool _shouldRollOnInit;
         private float _currentDuration;
         private RollingNumberAnimator<T> _animator;
+        private bool _applied;
 
         void Injectable.Inject(Resolver resolver)
         {
@@ -63,23 +64,35 @@ namespace Calluna.UI
             return this;
         }
 
+        /// <summary>
+        /// Called by the DI container. Auto-applies if <see cref="Apply"/> has not yet been
+        /// called manually, so components that configure the rolling number in their own
+        /// <c>Initialize()</c> don't need to guard against double-application.
+        /// </summary>
         void Initializable.Initialize()
         {
-            if (_value != null)
-                Init();
+            if (_value != null && !_applied)
+                Apply();
         }
 
-        public void Init()
+        /// <summary>
+        /// Applies the current configuration and starts (or restarts) the display.
+        /// Call this at the end of the fluent <c>With*</c> chain, or again at runtime
+        /// to pick up changed options such as a new ease function or duration.
+        /// </summary>
+        public void Apply()
         {
             if (_value == null)
-                throw new InvalidOperationException("Failed to init. Please set a value.");
+                throw new InvalidOperationException("Cannot apply: no value has been set. Call WithValue() first.");
+            _applied = true;
             _animator = new RollingNumberAnimator<T>(GetCurrentValue, _easeFunction, _formatValue);
             _currentValue = _value.Value;
-            _coroutineHelper.StartWithID(Roll(_shouldRollOnInit ? _currentDuration : 0f), _coroutineId);
+            _coroutineHelper.ReplaceWithID(Roll(_shouldRollOnInit ? _currentDuration : 0f), _coroutineId);
         }
 
         void Cleanable.Clean()
         {
+            _applied = false;
             if (_value != null)
                 _value.OnChanged -= OnValueChanged;
         }

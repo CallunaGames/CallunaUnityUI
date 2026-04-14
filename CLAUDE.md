@@ -61,7 +61,7 @@ rollingNumber.WithValue(observable)
     .WithEase(EaseFunction)
     .WithDuration(0.5f)
     .WithFormat(v => v.ToString("F2"))
-    .Init();
+    .Apply();
 ```
 
 **Styles** (`Runtime/Styles/`)  
