@@ -12,6 +12,7 @@ namespace Calluna.UI.Samples.VirtualScrollUI
     {
         [SerializeField] private Button _addButton;
         [SerializeField] private Button _removeButton;
+        [SerializeField] private Button _removeFirstButton;
         [SerializeField] private int    _initialItemCount = 200;
 
         private ObservableList<ItemData> _items;
