@@ -1,3 +1,4 @@
+using Calluna.DI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -5,10 +6,10 @@ using UnityEngine.UI;
 namespace Calluna.UI.Samples.VirtualScrollUI
 {
     /// <summary>
-    /// A single grid cell. Extends <see cref="VirtualScrollItem{TData}"/> so the pool
-    /// delivers <see cref="ItemData"/> via DI argument injection on every activation.
+    /// A single grid cell. Implements the Calluna DI lifecycle so the pool
+    /// delivers <see cref="ItemData"/> via argument injection on every activation.
     /// </summary>
-    public class ItemCell : VirtualScrollItem<ItemData>
+    public class ItemCell : MonoBehaviour, Injectable, Initializable, Cleanable
     {
         [SerializeField] private TextMeshProUGUI _indexLabel;
         [SerializeField] private TextMeshProUGUI _contentLabel;
@@ -20,14 +21,21 @@ namespace Calluna.UI.Samples.VirtualScrollUI
             new Color(0.16f, 0.16f, 0.18f),
         };
 
-        protected override void OnInitialize()
+        private ItemData _data;
+
+        void Injectable.Inject(Resolver resolver)
         {
-            _indexLabel.text   = $"#{Data.Index:000}";
-            _contentLabel.text = Data.Label;
-            _background.color  = _rowColors[Data.Index % _rowColors.Length];
+            _data = resolver.Resolve<ItemData>();
         }
 
-        protected override void OnClean()
+        void Initializable.Initialize()
+        {
+            _indexLabel.text   = $"#{_data.Index:000}";
+            _contentLabel.text = _data.Label;
+            _background.color  = _rowColors[_data.Index % _rowColors.Length];
+        }
+
+        void Cleanable.Clean()
         {
             _indexLabel.text   = string.Empty;
             _contentLabel.text = string.Empty;
