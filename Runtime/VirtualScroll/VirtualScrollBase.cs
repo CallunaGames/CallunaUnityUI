@@ -5,11 +5,12 @@ using UnityEngine.UI;
 namespace Calluna.UI
 {
     /// <summary>
-    /// Non-generic shared logic for the virtualised grid.
+    /// Non-generic shared logic for virtualised scroll views.
     /// Handles scroll events, visible-range computation, item placement,
-    /// and pool request/return dispatch.
+    /// and pool request/return dispatch. Layout-agnostic — works with any
+    /// <see cref="IScrollLayout"/> implementation (grid, vertical list, horizontal list, etc.).
     /// </summary>
-    public abstract class VirtualScrollGridBase<TItem> : MonoBehaviour
+    public abstract class VirtualScrollBase<TItem> : MonoBehaviour
         where TItem : Component
     {
         [SerializeField] private ScrollRect _scrollRect;

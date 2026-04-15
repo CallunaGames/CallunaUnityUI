@@ -4,25 +4,25 @@ using UnityEngine;
 namespace Calluna.UI
 {
     /// <summary>
-    /// Virtualised grid that passes a <typeparamref name="TData"/> entry as a DI argument to each
-    /// cell when it is (re-)activated. The pool injects and initialises the cell so it can read
-    /// its data via <c>resolver.Resolve&lt;TData&gt;()</c>.
+    /// Layout-agnostic virtualised scroll view. Passes a <typeparamref name="TData"/> entry as a
+    /// DI argument to each cell when it is (re-)activated. The pool injects and initialises the
+    /// cell so it can read its data via <c>resolver.Resolve&lt;TData&gt;()</c>.
     ///
     /// Reacts to individual <see cref="ReadonlyObservableList{TData}"/> events:
     /// <list type="bullet">
     ///   <item>Replace/swap — only the affected visible cells are refreshed; no rebuild.</item>
     ///   <item>Insert/remove — active cells above the mutation point are shifted and repositioned;
-    ///         <see cref="VirtualScrollGridBase{TItem}.RefreshVisibleItems"/> reconciles the visible range.</item>
+    ///         <see cref="VirtualScrollBase{TItem}.RefreshVisibleItems"/> reconciles the visible range.</item>
     /// </list>
     ///
     /// DI bindings required:
     /// <list type="bullet">
-    ///   <item><see cref="IScrollLayout"/> — e.g. <c>GridScrollLayout</c></item>
+    ///   <item><see cref="IScrollLayout"/> — any layout implementation</item>
     ///   <item><see cref="Pool{TItem,TData,PrefabInstantiationArguments}"/> — via <c>MonoPoolInstaller&lt;TItem,TData&gt;</c></item>
     ///   <item><see cref="ReadonlyObservableList{TData}"/> — data source</item>
     /// </list>
     /// </summary>
-    public abstract class VirtualScrollGrid<TItem, TData> : VirtualScrollGridBase<TItem>, Injectable, Initializable, Cleanable
+    public abstract class VirtualScrollView<TItem, TData> : VirtualScrollBase<TItem>, Injectable, Initializable, Cleanable
         where TItem : Component
     {
         private Pool<TItem, TData, PrefabInstantiationArguments> _pool;
