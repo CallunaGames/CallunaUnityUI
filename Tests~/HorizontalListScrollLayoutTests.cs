@@ -102,8 +102,9 @@ namespace Calluna.UI.Tests
         public void HorizontalListScrollLayout_GetVisibleIndexRange_ScrolledPastFirstItem_ExcludesIt()
         {
             var layout = Make(100, 200, spacing: 0);
-            // 3 items, each 100px wide. Viewport shows items 1 and 2 (x: 100 to 300).
-            (int first, int last) = layout.GetVisibleIndexRange(3, new Rect(100, -200, 200, 200));
+            // Item 0 right edge is at x=100. Shifting the viewport 1px past that (xMin=101)
+            // ensures item 0 is fully out of view.
+            (int first, int last) = layout.GetVisibleIndexRange(3, new Rect(101, -200, 200, 200));
             Assert.AreEqual(1, first);
             Assert.AreEqual(2, last);
         }

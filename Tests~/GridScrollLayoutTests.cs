@@ -101,8 +101,9 @@ namespace Calluna.UI.Tests
         public void GridScrollLayout_GetVisibleIndexRange_ScrolledPastFirstRow_ExcludesFirstRow()
         {
             var layout = Make(3, 100, 50);
-            // 6 items = 2 rows. Viewport shows only second row (y: -50 to -100)
-            (int first, int last) = layout.GetVisibleIndexRange(6, new Rect(0, -100, 300, 50));
+            // Row 0 bottom edge is at y=-50. Shifting the viewport 1px below that (yMax=-51)
+            // ensures row 0 is fully out of view.
+            (int first, int last) = layout.GetVisibleIndexRange(6, new Rect(0, -101, 300, 50));
             Assert.AreEqual(3, first);
             Assert.AreEqual(5, last);
         }

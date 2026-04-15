@@ -102,8 +102,9 @@ namespace Calluna.UI.Tests
         public void VerticalListScrollLayout_GetVisibleIndexRange_ScrolledPastFirstItem_ExcludesIt()
         {
             var layout = Make(200, 50, spacing: 0);
-            // 3 items, each 50px. Viewport shows items 1 and 2 (y: -50 to -150).
-            (int first, int last) = layout.GetVisibleIndexRange(3, new Rect(0, -150, 200, 100));
+            // Item 0 bottom edge is at y=-50. Shifting the viewport 1px below that (yMax=-51)
+            // ensures item 0 is fully out of view.
+            (int first, int last) = layout.GetVisibleIndexRange(3, new Rect(0, -151, 200, 100));
             Assert.AreEqual(1, first);
             Assert.AreEqual(2, last);
         }
