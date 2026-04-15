@@ -11,16 +11,16 @@ namespace Calluna.UI
         public event Action<Vector2> OnDragEnd;
 
         private RectTransform _transform;
-        private RectTransform _boundsTransform;
-        private RectTransform _boundTransform;
+        private RectTransform _boundsRegion;
+        private RectTransform _draggedRect;
         private RectTransform.Axis? _moveAxis;
 
         void Injectable.Inject(Resolver resolver)
         {
             Arguments args = resolver.Resolve<Arguments>();
             _transform = args.TransformToDrag;
-            _boundsTransform = args.Bounds;
-            _boundTransform = args.BoundTransform == null ? args.TransformToDrag : args.BoundTransform;
+            _boundsRegion = args.Bounds;
+            _draggedRect = args.BoundTransform == null ? args.TransformToDrag : args.BoundTransform;
             _moveAxis = args.MoveAxis;
         }
 
@@ -50,10 +50,10 @@ namespace Calluna.UI
             if (!boundsNullable.HasValue)
                 return delta;
 
-            Vector2 size = _boundTransform.rect.size * (Vector2)_boundTransform.lossyScale;
-            Vector2 prospectivePosition = (Vector2)_boundTransform.position + delta;
-            Vector2 clampedPosition = ClampPositionToBounds(prospectivePosition, size, _boundTransform.pivot, boundsNullable.Value);
-            return clampedPosition - (Vector2)_boundTransform.position;
+            Vector2 size = _draggedRect.rect.size * (Vector2)_draggedRect.lossyScale;
+            Vector2 prospectivePosition = (Vector2)_draggedRect.position + delta;
+            Vector2 clampedPosition = ClampPositionToBounds(prospectivePosition, size, _draggedRect.pivot, boundsNullable.Value);
+            return clampedPosition - (Vector2)_draggedRect.position;
         }
 
         // Pure geometry — no Unity object access. Testable without a RectTransform.
@@ -76,11 +76,11 @@ namespace Calluna.UI
 
         protected virtual Rect? GetBoundsRect()
         {
-            if (_boundsTransform == null)
+            if (_boundsRegion == null)
                 return null;
-            Rect bounds = _boundsTransform.rect;
-            bounds.size = Vector2.Scale(bounds.size, _boundsTransform.lossyScale);
-            bounds.position = (Vector2)_boundsTransform.position - (bounds.size * _boundsTransform.pivot);
+            Rect bounds = _boundsRegion.rect;
+            bounds.size = Vector2.Scale(bounds.size, _boundsRegion.lossyScale);
+            bounds.position = (Vector2)_boundsRegion.position - (bounds.size * _boundsRegion.pivot);
             return bounds;
         }
 

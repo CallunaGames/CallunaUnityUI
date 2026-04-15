@@ -11,7 +11,7 @@ namespace Calluna.UI
         [SerializeField] private TMP_InputField _inputField;
         [SerializeField] private string _format = string.Empty;
         
-        public event Action<string> OnParsingFailure;
+        public event Action<string> ParsingFailed;
 
         private CultureInfo _cultureInfo;
 
@@ -54,7 +54,7 @@ namespace Calluna.UI
         protected virtual void OnParseFailure(string input)
         {
             Debug.LogWarning($"{GetType().Name}: Could not parse input \"{input}\" as {typeof(TValue).Name}.", this);
-            OnParsingFailure?.Invoke(input);
+            ParsingFailed?.Invoke(input);
         }
 
         private string FormatValue(TValue value)

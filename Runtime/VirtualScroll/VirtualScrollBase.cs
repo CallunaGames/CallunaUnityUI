@@ -209,8 +209,9 @@ namespace Calluna.UI
         /// <summary>
         /// Viewport rect in content-local space (Unity y-up).
         /// yMax = top of viewport (less negative), yMin = bottom (more negative).
+        /// Override in tests to inject a fixed rect without needing a live ScrollRect.
         /// </summary>
-        private Rect GetViewportRect()
+        protected virtual Rect GetViewportRect()
         {
             _scrollRect.viewport.GetWorldCorners(_viewportCorners);
             // corners: [0]=BL  [1]=TL  [2]=TR  [3]=BR
