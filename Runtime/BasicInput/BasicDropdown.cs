@@ -34,7 +34,7 @@ namespace Calluna.UI
                 FlushDirtyOptions();
         }
 
-        internal void FlushDirtyOptions()
+        private void FlushDirtyOptions()
         {
             _areOptionsDirty = false;
             UpdateOptions();
