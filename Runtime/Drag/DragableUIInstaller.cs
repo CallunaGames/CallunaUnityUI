@@ -13,14 +13,11 @@ namespace Calluna.UI
 
         public override void InstallBindings(Binder binder)
         {
-            binder.BindInstance(
-                new DragableUI.Arguments()
-                {
-                    TransformToDrag = _dragableTransform,
-                    Bounds = _bounds,
-                    MoveAxis = _limitAxis ? _moveAxis : null,
-                    BoundTransform = _boundTransform
-                });
+            binder.BindInstance(new DragableUI.Arguments(
+                transformToDrag: _dragableTransform,
+                bounds:          _bounds,
+                boundTransform:  _boundTransform,
+                moveAxis:        _limitAxis ? _moveAxis : null));
         }
     }
 }

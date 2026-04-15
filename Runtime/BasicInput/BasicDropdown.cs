@@ -101,14 +101,19 @@ namespace Calluna.UI
                 SetValue(index);
         }
 
-        // After a list rebuild, recover the previously selected option by identity.
-        // If it no longer exists in the new list, fall back to index 0 (or -1 if the list is empty).
+        // After a list rebuild, recover the previously selected option by reference identity
+        // (handles reordering). If the option is no longer in the list (removed or replaced),
+        // reset to index 0 — the item is gone, so there is no meaningful "same" selection to
+        // preserve. Callers that care can react to the observable changing.
         private int GetSelectedIndex()
         {
-            if(_selectedOption == null)
-                return _options.Count > 0 ? 0 : -1;
-            int index = _options.IndexOf(_selectedOption);
-            return index < 0 && _options.Count > 0 ? 0 : index;
+            if (_selectedOption != null)
+            {
+                int index = _options.IndexOf(_selectedOption);
+                if (index >= 0) return index;
+            }
+            if (_options.Count == 0) return -1;
+            return 0;
         }
     }
 }

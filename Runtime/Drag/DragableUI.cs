@@ -84,12 +84,24 @@ namespace Calluna.UI
             return bounds;
         }
 
-        public struct Arguments
+        public readonly struct Arguments
         {
-            public RectTransform TransformToDrag;
-            public RectTransform Bounds;
-            public RectTransform BoundTransform;
-            public RectTransform.Axis? MoveAxis;
+            public readonly RectTransform TransformToDrag;
+            public readonly RectTransform Bounds;
+            public readonly RectTransform BoundTransform;
+            public readonly RectTransform.Axis? MoveAxis;
+
+            public Arguments(
+                RectTransform transformToDrag,
+                RectTransform bounds          = null,
+                RectTransform boundTransform  = null,
+                RectTransform.Axis? moveAxis  = null)
+            {
+                TransformToDrag = transformToDrag;
+                Bounds          = bounds;
+                BoundTransform  = boundTransform;
+                MoveAxis        = moveAxis;
+            }
         }
     }
 }

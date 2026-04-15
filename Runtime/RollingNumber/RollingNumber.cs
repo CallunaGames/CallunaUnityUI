@@ -25,7 +25,7 @@ namespace Calluna.UI
         void Injectable.Inject(Resolver resolver)
         {
             _coroutineHelper = resolver.Resolve<CoroutineHelper>();
-            _coroutineId = GetInstanceID().ToString();
+            _coroutineId = GetHashCode().ToString();
             _currentDuration = _duration;
         }
 
