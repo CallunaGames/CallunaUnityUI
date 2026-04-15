@@ -11,12 +11,12 @@ namespace Calluna.UI
         [SerializeField] private TextMeshProUGUI _text;
         [SerializeField] private string _format = string.Empty;
 
-        private ReadonlyObservable<TValue> _value;
+        private ReadonlyObservable<TValue> _observable;
         private CultureInfo _cultureInfo;
 
         void Injectable.Inject(Resolver resolver)
         {
-            _value = resolver.Resolve<ReadonlyObservable<TValue>>();
+            _observable = resolver.Resolve<ReadonlyObservable<TValue>>();
             _cultureInfo = resolver.ResolveOptional<CultureInfo>() ?? CultureInfo.InvariantCulture;
         }
 
@@ -27,13 +27,13 @@ namespace Calluna.UI
 
         void Initializable.Initialize()
         {
-            _value.OnChanged += UpdateText;
+            _observable.OnChanged += UpdateText;
             UpdateText();
         }
 
         void Cleanable.Clean()
         {
-            _value.OnChanged -= UpdateText;
+            _observable.OnChanged -= UpdateText;
         }
 
         protected virtual void UpdateText()
@@ -43,7 +43,7 @@ namespace Calluna.UI
 
         protected virtual string GetText()
         {
-            TValue value = _value.Value;
+            TValue value = _observable.Value;
             if (value is IFormattable formattable)
                 return formattable.ToString(_format, _cultureInfo);
             return value != null ? value.ToString() : string.Empty;

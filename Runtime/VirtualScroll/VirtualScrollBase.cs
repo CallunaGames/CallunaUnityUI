@@ -22,6 +22,9 @@ namespace Calluna.UI
         private readonly List<int> _recycleBuffer   = new();
         private readonly Vector3[] _viewportCorners = new Vector3[4];
 
+        // Cached static delegate — avoids a heap allocation on every insert-shift operation.
+        private static readonly Comparison<int> _descendingComparison = (a, b) => b.CompareTo(a);
+
         protected bool _isDirty;
         private Vector2 _lastViewportSize;
 
@@ -89,8 +92,9 @@ namespace Calluna.UI
         /// </summary>
         protected void ReplaceActiveItem(int index)
         {
-            if (!_activeItems.ContainsKey(index)) return;
-            ReturnActiveItemAt(index);
+            if (!_activeItems.TryGetValue(index, out TItem item)) return;
+            ReturnItem(item);
+            _activeItems.Remove(index);
             ActivateItem(index);
         }
 
@@ -106,7 +110,7 @@ namespace Calluna.UI
 
             // Descending order for positive delta (insert) to avoid key collisions.
             if (delta > 0)
-                _recycleBuffer.Sort((a, b) => b.CompareTo(a));
+                _recycleBuffer.Sort(_descendingComparison);
             else
                 _recycleBuffer.Sort();
 
@@ -127,7 +131,7 @@ namespace Calluna.UI
             _scrollRect = GetComponent<ScrollRect>();
         }
 
-        private void LateUpdate()
+        protected virtual void LateUpdate()
         {
             Vector2 viewportSize = _scrollRect.viewport.rect.size;
             if (viewportSize != _lastViewportSize)

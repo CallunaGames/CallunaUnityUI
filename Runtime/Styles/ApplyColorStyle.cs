@@ -36,10 +36,9 @@ namespace Calluna.UI
 
         private void UpdateColor()
         {
-            if (_styleSettings.HasValue && _styleSettings.Value.TryGetColorOf(_colorStyle, out Color color))
-                _graphic.color = color;
-            else
-                _graphic.color = _initialColor;
+            _graphic.color = _styleSettings.HasValue && _styleSettings.Value.TryGetColorOf(_colorStyle, out Color color)
+                ? color
+                : _initialColor;
         }
     }
 }

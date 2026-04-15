@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Calluna.UI
@@ -20,9 +19,17 @@ namespace Calluna.UI
 
         public bool TryGetColorOf(ColorStyleId style, out Color color)
         {
-            ColorStyleSetting setting = _settings.FirstOrDefault(s => s.Style == style);
-            color = setting != null ? setting.Color : default;
-            return setting != null;
+            for (int i = 0; i < _settings.Count; i++)
+            {
+                ColorStyleSetting setting = _settings[i];
+                if (setting.Style == style)
+                {
+                    color = setting.Color;
+                    return true;
+                }
+            }
+            color = default;
+            return false;
         }
 
         [Serializable]

@@ -44,7 +44,7 @@ namespace Calluna.UI
             _transform.position += (Vector3)LimitToBounds(delta);
         }
 
-        private Vector2 LimitToBounds(Vector2 delta)
+        protected virtual Vector2 LimitToBounds(Vector2 delta)
         {
             Rect? boundsNullable = GetBoundsRect();
             if (!boundsNullable.HasValue)
@@ -74,7 +74,7 @@ namespace Calluna.UI
             return position - new Vector2(deltaMinX, deltaMinY) - new Vector2(deltaMaxX, deltaMaxY);
         }
 
-        private Rect? GetBoundsRect()
+        protected virtual Rect? GetBoundsRect()
         {
             if (_boundsTransform == null)
                 return null;

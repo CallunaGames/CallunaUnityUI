@@ -14,19 +14,19 @@ namespace Calluna.UI
         private CoroutineHelper _coroutineHelper;
         private ReadonlyObservable<T> _value;
         private Func<float, float> _easeFunction = f => f;
-        private Func<T, string> _formatValue = f => f is IFormattable fmt ? fmt.ToString(null, null) : f?.ToString() ?? string.Empty;
+        private Func<T, string> _formatter = f => f is IFormattable fmt ? fmt.ToString(null, null) : f?.ToString() ?? string.Empty;
         private T _currentValue;
         private string _coroutineId;
         private bool _shouldRollOnInit;
-        private float _currentDuration;
+        private float _activeDuration;
         private RollingNumberAnimator<T> _animator;
-        private bool _applied;
+        private bool _isApplied;
 
         void Injectable.Inject(Resolver resolver)
         {
             _coroutineHelper = resolver.Resolve<CoroutineHelper>();
             _coroutineId = GetHashCode().ToString();
-            _currentDuration = _duration;
+            _activeDuration = _duration;
         }
 
         public RollingNumber<T> WithValue(ReadonlyObservable<T> value)
@@ -42,7 +42,7 @@ namespace Calluna.UI
 
         public RollingNumber<T> WithFormat(Func<T, string> formatFunction)
         {
-            _formatValue = formatFunction;
+            _formatter = formatFunction;
             return this;
         }
 
@@ -60,7 +60,7 @@ namespace Calluna.UI
 
         public RollingNumber<T> WithDuration(float duration)
         {
-            _currentDuration = duration;
+            _activeDuration = duration;
             return this;
         }
 
@@ -71,7 +71,7 @@ namespace Calluna.UI
         /// </summary>
         void Initializable.Initialize()
         {
-            if (_value != null && !_applied)
+            if (_value != null && !_isApplied)
                 Apply();
         }
 
@@ -84,15 +84,15 @@ namespace Calluna.UI
         {
             if (_value == null)
                 throw new InvalidOperationException("Cannot apply: no value has been set. Call WithValue() first.");
-            _applied = true;
-            _animator = new RollingNumberAnimator<T>(GetCurrentValue, _easeFunction, _formatValue);
+            _isApplied = true;
+            _animator = new RollingNumberAnimator<T>(GetCurrentValue, _easeFunction, _formatter);
             _currentValue = _value.Value;
-            _coroutineHelper.ReplaceWithID(Roll(_shouldRollOnInit ? _currentDuration : 0f), _coroutineId);
+            _coroutineHelper.ReplaceWithID(Roll(_shouldRollOnInit ? _activeDuration : 0f), _coroutineId);
         }
 
         void Cleanable.Clean()
         {
-            _applied = false;
+            _isApplied = false;
             if (_value != null)
                 _value.OnChanged -= OnValueChanged;
         }
@@ -104,7 +104,7 @@ namespace Calluna.UI
 
         private void OnValueChanged()
         {
-            _coroutineHelper.ReplaceWithID(Roll(_currentDuration), _coroutineId);
+            _coroutineHelper.ReplaceWithID(Roll(_activeDuration), _coroutineId);
         }
 
         private IEnumerator Roll(float duration)
