@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -106,6 +107,67 @@ namespace Calluna.UI.Tests
             (int first, int last) = layout.GetVisibleIndexRange(6, new Rect(0, -101, 300, 50));
             Assert.AreEqual(3, first);
             Assert.AreEqual(5, last);
+        }
+
+        // ── Constructor validation ───────────────────────────────────────────────
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        [TestCase(-100)]
+        [Description("Constructor with Columns < 1 => throws ArgumentException?")]
+        public void GridScrollLayout_Constructor_ColumnsLessThanOne_ThrowsArgumentException(int columns)
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new GridScrollLayout(new GridScrollLayout.Settings
+                {
+                    Columns  = columns,
+                    CellSize = new Vector2(100, 50),
+                    Spacing  = Vector2.zero,
+                    Padding  = new Padding()
+                }));
+        }
+
+        // ── ItemSize ─────────────────────────────────────────────────────────────
+
+        [TestCase(100f, 50f)]
+        [TestCase(200f, 80f)]
+        [TestCase(32f,  32f)]
+        [Description("ItemSize property => returns the CellSize passed in Settings?")]
+        public void GridScrollLayout_ItemSize_ReturnsSettingsCellSize(float cellW, float cellH)
+        {
+            var layout = Make(2, cellW, cellH);
+            Assert.AreEqual(new Vector2(cellW, cellH), layout.ItemSize);
+        }
+
+        // ── GetVisibleIndexRange: partial cell at boundary ───────────────────────
+
+        [Test]
+        [Description("GetVisibleIndexRange with viewport partially overlapping boundary cell => includes that cell?")]
+        public void GridScrollLayout_GetVisibleIndexRange_ViewportShowsPartialCell_IncludesIt()
+        {
+            // 6 items, 3 columns, cellH=50 → 2 rows.
+            // Row 1 starts at y=-50. A viewport whose yMax=-25 partially overlaps row 0
+            // and whose yMin=-75 partially overlaps row 1. Both rows must be included.
+            var layout = Make(3, 100, 50);
+            (int first, int last) = layout.GetVisibleIndexRange(6, new Rect(0, -75, 300, 50));
+            Assert.AreEqual(0, first);
+            Assert.AreEqual(5, last);
+        }
+
+        // ── GetVisibleIndexRange: padding offsets visibility ─────────────────────
+
+        [Test]
+        [Description("GetVisibleIndexRange with non-zero padding => visibility range accounts for padding offset?")]
+        public void GridScrollLayout_GetVisibleIndexRange_WithPadding_AdjustsVisibilityCorrectly()
+        {
+            // 6 items, 3 columns, cellH=50, padTop=20.
+            // Row 0 occupies y: -20 to -70 (anchored position).
+            // Row 1 top is at y=-70. Using yMin=-69 keeps the viewport 1px above row 1's top,
+            // so the "touching = visible" boundary condition cannot pull row 1 into the range.
+            var layout = Make(3, 100, 50, padTop: 20);
+            (int first, int last) = layout.GetVisibleIndexRange(6, new Rect(0, -69, 300, 49));
+            Assert.AreEqual(0, first);
+            Assert.LessOrEqual(last, 2); // row 1 must not be included
         }
     }
 }

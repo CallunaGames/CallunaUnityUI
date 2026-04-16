@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -116,6 +117,53 @@ namespace Calluna.UI.Tests
             // Viewport shows x: 50 to 150 — partially overlaps item 0 and item 1.
             (int first, int last) = layout.GetVisibleIndexRange(3, new Rect(50, -200, 100, 200));
             Assert.AreEqual(0, first);
+            Assert.AreEqual(1, last);
+        }
+
+        // ── Constructor validation ───────────────────────────────────────────────
+
+        [TestCase(0f)]
+        [TestCase(-1f)]
+        [TestCase(-100f)]
+        [Description("Constructor with ItemSize.x <= 0 => throws ArgumentException?")]
+        public void HorizontalListScrollLayout_Constructor_ItemSizeXZeroOrNegative_ThrowsArgumentException(float itemW)
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new HorizontalListScrollLayout(new HorizontalListScrollLayout.Settings
+                {
+                    ItemSize = new Vector2(itemW, 200f),
+                    Spacing  = 0f,
+                    Padding  = new Padding()
+                }));
+        }
+
+        // ── ItemSize ─────────────────────────────────────────────────────────────
+
+        [TestCase(100f, 200f)]
+        [TestCase(50f,  80f)]
+        [TestCase(300f, 150f)]
+        [Description("ItemSize property => returns the ItemSize passed in Settings?")]
+        public void HorizontalListScrollLayout_ItemSize_ReturnsSettingsItemSize(float itemW, float itemH)
+        {
+            var layout = Make(itemW, itemH);
+            Assert.AreEqual(new Vector2(itemW, itemH), layout.ItemSize);
+        }
+
+        // ── GetVisibleIndexRange: padding offsets visibility ─────────────────────
+
+        [Test]
+        [Description("GetVisibleIndexRange with non-zero left padding => first/last indices account for padding?")]
+        public void HorizontalListScrollLayout_GetVisibleIndexRange_WithPadding_AdjustsFirstAndLastCorrectly()
+        {
+            // 3 items, itemW=100, padLeft=40, no spacing.
+            // Item 0 occupies x:  40 to 140.
+            // Item 1 occupies x: 140 to 240.
+            // Item 2 occupies x: 240 to 340.
+            // Using xMin=141 and xMax=239 keeps the viewport 1px inside item 1 on both sides,
+            // so the "touching = visible" boundary condition cannot pull items 0 or 2 into range.
+            var layout = Make(100, 200, padLeft: 40);
+            (int first, int last) = layout.GetVisibleIndexRange(3, new Rect(141, -200, 98, 200));
+            Assert.AreEqual(1, first);
             Assert.AreEqual(1, last);
         }
     }

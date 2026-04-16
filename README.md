@@ -8,7 +8,7 @@ This Unity package implements reactive UI MonoBehaviours built on Calluna's Obse
 - Animated number transitions (rolling numbers)
 - Draggable UI panels
 - ScriptableObject-based color theming
-- Virtualised scrollable grids for large or unbounded lists
+- Virtualised scrollable views (grid, vertical list, horizontal list) for large or unbounded lists
 
 ## Planned Features
 - Popup system
@@ -75,7 +75,7 @@ Input components resolve `Observable<TValue>` from DI and provide two-way bindin
 
 `BasicDropdown` additionally resolves a `ReadonlyObservableList<TMP_Dropdown.OptionData>` for the option list, and reacts live to list changes using `ObservableListChangeDetector<T>`.
 
-`TextInput` subclasses silently discard unparseable input and emit a `Debug.LogWarning`. Override `OnParseFailure(string)` for custom error handling.
+`TextInput` subclasses emit a `Debug.LogWarning` and fire the `ParsingFailed` event (`Action<string>`) when input cannot be parsed. Override `OnParseFailure(string)` for custom error handling beyond the event.
 
 #### Example: Int input field
 
@@ -140,13 +140,13 @@ public class ThemeInstaller : MonoInstaller
 
 `FloatRollingNumber` and `IntRollingNumber` animate a `TextMeshProUGUI` label smoothly from its current value to a new one whenever the bound observable changes.
 
-Configured via a fluent builder API. When used with DI the component initialises automatically; when used without DI call `Init()` explicitly after the builder chain.
+Configured via a fluent builder API. When used with DI the component initialises automatically; when used without DI call `Apply()` explicitly after the builder chain.
 
 ```csharp
 rollingNumber
     .WithValue(myObservable)
     .WithDuration(0.5f)
-    .WithEase(EasingFunctions.EaseOutQuad)
+    .WithEase(Tween.EaseOutCubic)
     .WithFormat(v => v.ToString("F2"))
     .WithRollOnInit()
     .Apply(); // only needed when DI is not in use
@@ -166,34 +166,47 @@ rollingNumber
 
 ### Drag
 
-`DragableUI` makes any `RectTransform` draggable within its parent, with an optional clamped bounds `RectTransform`.
+`DragableUI` makes any `RectTransform` draggable within its parent, with optional bounds clamping and axis locking.
 
-Configure via `DragableUIInstaller` (a `MonoInstaller`). Its serialized `Arguments` struct exposes an optional `Bounds` reference in the Inspector — leave it unassigned for unconstrained dragging.
+Configure via `DragableUIInstaller` (a `MonoInstaller`). Its serialized fields map directly to the `DragableUI.Arguments` struct:
+
+| Field | Type | Description |
+|---|---|---|
+| `TransformToDrag` | `RectTransform` | The transform that moves on drag |
+| `Bounds` | `RectTransform` (optional) | Region the element is clamped inside |
+| `BoundTransform` | `RectTransform` (optional) | Override which rect is measured against bounds (defaults to `TransformToDrag`) |
+| `MoveAxis` | `RectTransform.Axis?` (optional) | Lock movement to Horizontal or Vertical; `null` for free movement |
+
+`DragableUI` exposes `OnDragStart` and `OnDragEnd` events (both `Action<Vector2>`). `LimitToBounds(Vector2 delta)` and `GetBoundsRect()` are `protected virtual` — subclass `DragableUI` to customise clamping behaviour.
 
 ```
 GameObjectContext
-└── DragableUIInstaller    (set Bounds if needed)
+└── DragableUIInstaller    (set Bounds / MoveAxis if needed)
 Panel
 └── DragableUI             (drag target)
 ```
 
 ---
 
-### Virtual Scroll Grid
+### Virtual Scroll View
 
-A virtualised scrollable grid that only instantiates cells for items currently visible in the viewport. Use it when a `ScrollRect` must display a large or unbounded list of items and you cannot afford to instantiate one `GameObject` per entry.
+A virtualised scrollable view that only instantiates cells for items currently visible in the viewport. Use it when a `ScrollRect` must display a large or unbounded list of items and you cannot afford to instantiate one `GameObject` per entry.
 
 #### Class hierarchy
 
 ```
 IScrollLayout
-    GridScrollLayout(Settings)          — top-to-bottom fixed-column grid
+    GridScrollLayout(Settings)              — top-to-bottom fixed-column grid
+    VerticalListScrollLayout(Settings)      — single-column top-to-bottom list
+    HorizontalListScrollLayout(Settings)    — single-row left-to-right list
 
-VirtualScrollGridBase<TItem>            — MonoBehaviour, shared scroll/pool/layout logic
-    VirtualScrollGrid<TItem, TData>     — data list from ReadonlyObservableList<TData>
+VirtualScrollBase<TItem>                   — MonoBehaviour, shared scroll/pool/layout logic
+    VirtualScrollView<TItem, TData>        — data list from ReadonlyObservableList<TData>
 ```
 
-`GridScrollLayout` is constructed from a serializable `Settings` struct:
+#### Layout types
+
+**`GridScrollLayout`** — top-to-bottom grid with a fixed column count.
 
 | Field | Type | Description |
 |---|---|---|
@@ -202,9 +215,39 @@ VirtualScrollGridBase<TItem>            — MonoBehaviour, shared scroll/pool/la
 | `Spacing` | `Vector2` | Gap between cells (horizontal, vertical) |
 | `Padding` | `Padding` | Outer padding (`Top`, `Bottom`, `Left`, `Right`) |
 
+Installer base class: `VirtualScrollGridInstaller`
+
+**`VerticalListScrollLayout`** — single-column list scrolling vertically.
+
+| Field | Type | Description |
+|---|---|---|
+| `ItemSize` | `Vector2` | Width and height of each item in pixels |
+| `Spacing` | `float` | Vertical gap between items |
+| `Padding` | `Padding` | Outer padding (`Top`, `Bottom`, `Left`, `Right`) |
+
+Installer base class: `VirtualScrollVerticalListInstaller`
+
+**`HorizontalListScrollLayout`** — single-row list scrolling horizontally.
+
+| Field | Type | Description |
+|---|---|---|
+| `ItemSize` | `Vector2` | Width and height of each item in pixels |
+| `Spacing` | `float` | Horizontal gap between items |
+| `Padding` | `Padding` | Outer padding (`Top`, `Bottom`, `Left`, `Right`) |
+
+Installer base class: `VirtualScrollHorizontalListInstaller`
+
+Each installer base class is abstract — create a one-line concrete subclass to make it attachable in the Unity Editor:
+
+```csharp
+public class MyGridInstaller : VirtualScrollGridInstaller { }
+public class MyVerticalListInstaller : VirtualScrollVerticalListInstaller { }
+public class MyHorizontalListInstaller : VirtualScrollHorizontalListInstaller { }
+```
+
 #### Usage
 
-The grid takes a `ReadonlyObservableList<TData>` as its data source, so it reacts correctly to insertions, removals, and replacements — not just count changes. If cells are uniform and carry no meaningful data, use a lightweight model (e.g. an empty struct or an `int` index) as `TData`.
+The view takes a `ReadonlyObservableList<TData>` as its data source, so it reacts correctly to insertions, removals, replacements, and swaps — not just count changes. If cells are uniform and carry no meaningful data, use a lightweight model (e.g. an empty struct or an `int` index) as `TData`.
 
 The pool injects the `TData` entry into each cell as a DI argument on every activation.
 
@@ -237,15 +280,15 @@ public class ItemCell : MonoBehaviour, Injectable, Initializable, Cleanable
 }
 ```
 
-**Step 3 — Create the grid MonoBehaviour**
+**Step 3 — Create the scroll view MonoBehaviour**
 
 ```csharp
-public class ItemGrid : VirtualScrollGrid<ItemCell, ItemData> { }
+public class ItemGrid : VirtualScrollView<ItemCell, ItemData> { }
 ```
 
 **Step 4 — Write the installer**
 
-Subclass `VirtualScrollGridInstaller` to get the `IScrollLayout` binding for free. Its serialized `_layoutSettings` field appears in the Inspector automatically. Call `base.InstallBindings(binder)` first, then add the data list binding:
+Subclass the appropriate layout installer to get the `IScrollLayout` binding for free. Its serialized `_layoutSettings` field appears in the Inspector automatically. Call `base.InstallBindings(binder)` first, then add the data list binding:
 
 ```csharp
 public class ItemGridInstaller : VirtualScrollGridInstaller
@@ -281,4 +324,17 @@ The `ScrollRect`'s **Content** and **Viewport** fields must be wired as usual fo
 
 #### Exposing the readonly interface
 
-Any system that only reads the list should resolve `ReadonlyObservableList<ItemData>`. A system that populates the list resolves `ObservableList<ItemData>` and calls `.Add()` / `.Remove()` — the grid reacts automatically.
+Any system that only reads the list should resolve `ReadonlyObservableList<ItemData>`. A system that populates the list resolves `ObservableList<ItemData>` and calls `.Add()` / `.Remove()` — the view reacts automatically.
+
+---
+
+## Samples
+
+The following importable samples are available via the Unity Package Manager.
+
+| Sample | Description |
+|---|---|
+| **Basic UI** | Installers and testers for text displays, inputs, progress bars, and color styles |
+| **Dragable UI** | Drag example with event logging |
+| **Advanced UI** | `RollingNumber` with fluent builder configuration and easing |
+| **Virtual Scroll UI** | Virtualised grid scroll view with live data insertion and removal |

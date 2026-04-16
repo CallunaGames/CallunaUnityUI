@@ -2,10 +2,10 @@
     "name": "Calluna.UI.Samples.VirtualScrollUI",
     "rootNamespace": "Calluna.UI.Samples.VirtualScrollUI",
     "references": [
-        "GUID:3d5b1a843e90eb44eb1352d7b859bf9b",
-        "GUID:fb92ad7c22f767448a052126eb8fa706",
-        "GUID:a4e2fcc097ca52d46a2cc62ef3c5e9bf",
-        "GUID:6055be8ebefd69e48b49212b09b47b2f"
+        "Calluna.Core",
+        "Calluna.DI",
+        "Unity.TextMeshPro",
+        "Calluna.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -116,6 +117,53 @@ namespace Calluna.UI.Tests
             // Viewport shows y: -25 to -75 — partially overlaps item 0 and item 1.
             (int first, int last) = layout.GetVisibleIndexRange(3, new Rect(0, -75, 200, 50));
             Assert.AreEqual(0, first);
+            Assert.AreEqual(1, last);
+        }
+
+        // ── Constructor validation ───────────────────────────────────────────────
+
+        [TestCase(0f)]
+        [TestCase(-1f)]
+        [TestCase(-50f)]
+        [Description("Constructor with ItemSize.y <= 0 => throws ArgumentException?")]
+        public void VerticalListScrollLayout_Constructor_ItemSizeYZeroOrNegative_ThrowsArgumentException(float itemH)
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new VerticalListScrollLayout(new VerticalListScrollLayout.Settings
+                {
+                    ItemSize = new Vector2(200f, itemH),
+                    Spacing  = 0f,
+                    Padding  = new Padding()
+                }));
+        }
+
+        // ── ItemSize ─────────────────────────────────────────────────────────────
+
+        [TestCase(200f, 50f)]
+        [TestCase(100f, 30f)]
+        [TestCase(400f, 120f)]
+        [Description("ItemSize property => returns the ItemSize passed in Settings?")]
+        public void VerticalListScrollLayout_ItemSize_ReturnsSettingsItemSize(float itemW, float itemH)
+        {
+            var layout = Make(itemW, itemH);
+            Assert.AreEqual(new Vector2(itemW, itemH), layout.ItemSize);
+        }
+
+        // ── GetVisibleIndexRange: padding offsets visibility ─────────────────────
+
+        [Test]
+        [Description("GetVisibleIndexRange with non-zero top padding => first/last indices account for padding?")]
+        public void VerticalListScrollLayout_GetVisibleIndexRange_WithPadding_AdjustsFirstAndLastCorrectly()
+        {
+            // 3 items, itemH=50, padTop=30, no spacing.
+            // Item 0 occupies y: -30 to -80.
+            // Item 1 occupies y: -80 to -130.
+            // Item 2 occupies y: -130 to -180.
+            // Using yMax=-81 and yMin=-129 keeps the viewport 1px inside item 1 on both sides,
+            // so the "touching = visible" boundary condition cannot pull items 0 or 2 into range.
+            var layout = Make(200, 50, padTop: 30);
+            (int first, int last) = layout.GetVisibleIndexRange(3, new Rect(0, -129, 200, 48));
+            Assert.AreEqual(1, first);
             Assert.AreEqual(1, last);
         }
     }

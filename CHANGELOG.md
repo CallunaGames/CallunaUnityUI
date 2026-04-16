@@ -1,3 +1,26 @@
+## [1.5.0] - 2026-04-14
+
+### Breaking Changes
+- `RollingNumber<T>.Init()` has been renamed to `Apply()`. Replace all calls to `.Init()` with `.Apply()` at the end of the fluent builder chain.
+- `VirtualScrollGrid<TItem, TData>` has been renamed to `VirtualScrollView<TItem, TData>`. Update all type references, installer subclasses, and serialized MonoBehaviour components accordingly.
+- `VirtualScrollGridBase<TItem>` has been renamed to `VirtualScrollBase<TItem>`. Any custom base-class references or subclasses must be updated to use the new name.
+- `DragableUI.Arguments` is now a `readonly struct` with a constructor instead of a mutable struct with object-initializer fields. Replace object-initializer syntax (`new DragableUI.Arguments { BoundsRegion = rect }`) with the constructor form (`new DragableUI.Arguments(rect)`).
+- `TextInput<TValue>.OnParsingFailure` event has been renamed to `ParsingFailed`. Update all subscriptions and unsubscriptions to use the new name.
+
+### Added
+- `VerticalListScrollLayout` — single-column top-to-bottom virtualised list layout with configurable item size, spacing, and padding.
+- `HorizontalListScrollLayout` — single-row left-to-right virtualised list layout with configurable item size, spacing, and padding.
+- `VirtualScrollVerticalListInstaller` and `VirtualScrollHorizontalListInstaller` — abstract installer base classes for list scroll views, following the same pattern as `VirtualScrollGridInstaller`.
+- `TextInput<TValue>.ParsingFailed` event — subscribe to receive the raw string whenever the user's input cannot be parsed, without needing to subclass.
+
+### Fixed
+- `RollingNumber<T>.Apply()` no longer starts a second animation coroutine when the DI container calls `Initialize()` after the caller has already called `Apply()` manually. The first `Apply()` call marks the component as applied; the container's automatic path becomes a no-op. Calling `Apply()` explicitly again still re-applies and restarts the animation as expected.
+- `ApplyColorStyle` no longer throws when a `ColorStyleId` is not present in the active `ColorStyleSettings`; it falls back to the component's initial color instead.
+
+### Performance
+- `ColorStyleSettings.TryGetColorOf` no longer allocates a closure and delegate on every style-change event; the internal lookup now uses a plain loop.
+- `VirtualScrollBase` no longer allocates a sort delegate on every list-insert operation; the descending-index `Comparison<int>` is now a static readonly field.
+
 ## [1.4.0] - 2026-04-11
 
 ### Breaking Changes
