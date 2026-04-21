@@ -85,7 +85,7 @@ namespace Calluna.UI
             if (_value == null)
                 throw new InvalidOperationException("Cannot apply: no value has been set. Call WithValue() first.");
             _isApplied = true;
-            _animator = new RollingNumberAnimator<T>(GetCurrentValue, _easeFunction, _formatter);
+            _animator = new RollingNumberAnimator<T>(Interpolate, _easeFunction, _formatter);
             _currentValue = _value.Value;
             _coroutineHelper.ReplaceWithID(Roll(_shouldRollOnInit ? _activeDuration : 0f), _coroutineId);
         }
@@ -97,7 +97,7 @@ namespace Calluna.UI
                 _value.OnChanged -= OnValueChanged;
         }
 
-        protected void Reset()
+        private void Reset()
         {
             _text = transform.GetComponentInChildren<TextMeshProUGUI>();
         }
@@ -136,6 +136,6 @@ namespace Calluna.UI
             _text.text = _animator.Format(value);
         }
 
-        protected abstract T GetCurrentValue(T startValue, T targetValue, float t);
+        protected abstract T Interpolate(T startValue, T targetValue, float t);
     }
 }

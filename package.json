@@ -1,12 +1,12 @@
 {
   "name": "com.calluna.ui",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "displayName": "Calluna Unity UI",
   "description": "UI basics for Calluna Games Unity projects",
   "unity": "6000.33",
   "unityRelease": "",
   "documentationUrl": "https://github.com/CallunaGames/CallunaUnityUI",
-  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityUI/compare/v1.4.0...v1.5.0",
+  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityUI/compare/v1.5.0...v1.6.0",
   "licensesUrl": "",
   "dependencies": {
     "com.calluna.core": "1.2.0",
@@ -43,6 +43,7 @@
     "progress",
     "input",
     "drag",
+    "bounds-constrainer",
     "theming"
   ],
   "author": {

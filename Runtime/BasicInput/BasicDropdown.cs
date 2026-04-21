@@ -30,12 +30,7 @@ namespace Calluna.UI
 
         private void Update()
         {
-            if (_areOptionsDirty)
-                FlushDirtyOptions();
-        }
-
-        private void FlushDirtyOptions()
-        {
+            if (!_areOptionsDirty) return;
             _areOptionsDirty = false;
             UpdateOptions();
         }

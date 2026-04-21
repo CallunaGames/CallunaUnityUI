@@ -6,8 +6,7 @@ namespace Calluna.UI
     public class DragableUIInstaller : MonoInstaller
     {
         [SerializeField] private RectTransform _dragableTransform;
-        [SerializeField, Header("Optional")] private RectTransform _bounds;
-        [SerializeField] private RectTransform _boundTransform;
+        [SerializeField, Header("Optional")] private RectTransform _boundTransform;
         [SerializeField] private bool _limitAxis;
         [SerializeField] private RectTransform.Axis _moveAxis;
 
@@ -15,7 +14,6 @@ namespace Calluna.UI
         {
             binder.BindInstance(new DragableUI.Arguments(
                 transformToDrag: _dragableTransform,
-                bounds:          _bounds,
                 boundTransform:  _boundTransform,
                 moveAxis:        _limitAxis ? _moveAxis : null));
         }

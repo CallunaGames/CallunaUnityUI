@@ -1,3 +1,18 @@
+## [1.6.0] - 2026-04-21
+
+### Breaking Changes
+- `DragableUI.Arguments` no longer has a `Bounds` field. Configure bounds clamping via `UIBoundsConstrainerInstaller` in the same DI context instead; omit it entirely for unclamped dragging.
+
+### Added
+- `UIBoundsConstrainer` — a `MonoBehaviour` that clamps any `RectTransform` inside a configurable bounds region. Usable standalone (e.g. to keep tooltips on screen) or alongside `DragableUI` for bounded dragging.
+- `IUIBoundsConstrainer` — interface exposing `Clamp(RectTransform)` and `GetBoundsRect()`; `DragableUI` now depends on this interface, enabling test doubles without a live scene.
+- `UIBoundsConstrainerInstaller` — `MonoInstaller` that binds `UIBoundsConstrainer.Arguments` and creates the `UIBoundsConstrainer` component on a named child `GameObject`.
+
+### Internal
+- `DragableUI` resolves `IUIBoundsConstrainer` via DI instead of owning the bounds geometry directly; `_draggedRect` renamed to `_constrainedRect` for clarity.
+
+---
+
 ## [1.5.0] - 2026-04-14
 
 ### Breaking Changes
