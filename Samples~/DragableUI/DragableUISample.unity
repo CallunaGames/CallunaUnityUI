@@ -481,7 +481,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dragableTransform: {fileID: 440378914}
-  _bounds: {fileID: 330507410}
   _boundTransform: {fileID: 0}
   _limitAxis: 1
   _moveAxis: 0
@@ -617,7 +616,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dragableTransform: {fileID: 770405400}
-  _bounds: {fileID: 330507410}
   _boundTransform: {fileID: 0}
   _limitAxis: 1
   _moveAxis: 1
@@ -1074,6 +1072,7 @@ GameObject:
   - component: {fileID: 1415412421}
   - component: {fileID: 1415412420}
   - component: {fileID: 1415412424}
+  - component: {fileID: 1415412425}
   m_Layer: 5
   m_Name: PopupWithBounds
   m_TagString: Untagged
@@ -1115,8 +1114,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dragableTransform: {fileID: 1415412419}
-  _bounds: {fileID: 330507410}
-  _boundTransform: {fileID: 1000006273}
+  _boundTransform: {fileID: 1415412419}
   _limitAxis: 0
   _moveAxis: 0
 --- !u!114 &1415412421
@@ -1133,6 +1131,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _monoInstallers:
   - {fileID: 1415412420}
+  - {fileID: 1415412425}
   _scriptableObjectInstallers: []
 --- !u!114 &1415412422
 MonoBehaviour:
@@ -1185,6 +1184,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dragableUI: {fileID: 1000006274}
+--- !u!114 &1415412425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1415412418}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d95f3cfeadacf34da4f4637d55b3a88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _bounds: {fileID: 330507410}
 --- !u!1 &1421141800
 GameObject:
   m_ObjectHideFlags: 0
@@ -1200,6 +1212,7 @@ GameObject:
   - component: {fileID: 1421141803}
   - component: {fileID: 1421141802}
   - component: {fileID: 1421141807}
+  - component: {fileID: 1421141808}
   m_Layer: 5
   m_Name: DragableImage
   m_TagString: Untagged
@@ -1239,7 +1252,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dragableTransform: {fileID: 1421141801}
-  _bounds: {fileID: 330507410}
   _boundTransform: {fileID: 0}
   _limitAxis: 0
   _moveAxis: 0
@@ -1257,6 +1269,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _monoInstallers:
   - {fileID: 1421141802}
+  - {fileID: 1421141808}
   _scriptableObjectInstallers: []
 --- !u!114 &1421141804
 MonoBehaviour:
@@ -1321,6 +1334,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dragableUI: {fileID: 1421141804}
+--- !u!114 &1421141808
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1421141800}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d95f3cfeadacf34da4f4637d55b3a88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _bounds: {fileID: 330507410}
 --- !u!1 &1703171493
 GameObject:
   m_ObjectHideFlags: 0
@@ -1376,7 +1402,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dragableTransform: {fileID: 1703171494}
-  _bounds: {fileID: 0}
   _boundTransform: {fileID: 0}
   _limitAxis: 0
   _moveAxis: 0

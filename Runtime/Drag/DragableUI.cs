@@ -18,7 +18,7 @@ namespace Calluna.UI
         void Injectable.Inject(Resolver resolver)
         {
             Arguments args = resolver.Resolve<Arguments>();
-            _boundsConstrainer = resolver.Resolve<UIBoundsConstrainer>();
+            _boundsConstrainer = resolver.ResolveOptional<UIBoundsConstrainer>();
             _transform = args.TransformToDrag;
             _constrainedRect = args.BoundTransform == null ? args.TransformToDrag : args.BoundTransform;
             _moveAxis = args.MoveAxis;
