@@ -166,5 +166,35 @@ namespace Calluna.UI.Tests
             Assert.AreEqual(1, first);
             Assert.AreEqual(1, last);
         }
+
+        // ── ComputeContentSize: negative itemCount ───────────────────────────────
+
+        [TestCase(-1)]
+        [TestCase(-5)]
+        [TestCase(-100)]
+        [Description("ComputeContentSize with negative itemCount => returns Vector2.zero (same as zero)?")]
+        public void HorizontalListScrollLayout_ComputeContentSize_NegativeItemCount_ReturnsZero(int itemCount)
+        {
+            var layout = Make(100, 200);
+            Assert.AreEqual(Vector2.zero, layout.ComputeContentSize(itemCount));
+        }
+
+        // ── GetVisibleIndexRange: middle window of a long list ───────────────────
+
+        [Test]
+        [Description("GetVisibleIndexRange with viewport over only a middle window of a long list => first and last indices are both bounded away from the extremes?")]
+        public void HorizontalListScrollLayout_GetVisibleIndexRange_ViewportShowsMiddleWindow_ExcludesFirstAndLastItems()
+        {
+            // 6 items, itemW=50, no spacing/padding.
+            // Item 0: x [0, 50],    Item 1: x [50, 100],   Item 2: x [100, 150],
+            // Item 3: x [150, 200], Item 4: x [200, 250],  Item 5: x [250, 300].
+            // Viewport: xMin=51, xMax=249 (width=198) — 1px past item 0's right, 1px before item 5's left.
+            // first = max(0, ceil((51-0-50)/50)) = max(0, ceil(0.02)) = 1
+            // last  = floor((249-0)/50)           = floor(4.98)       = 4
+            var layout = Make(50, 200);
+            (int first, int last) = layout.GetVisibleIndexRange(6, new Rect(51, -200, 198, 200));
+            Assert.AreEqual(1, first);
+            Assert.AreEqual(4, last);
+        }
     }
 }

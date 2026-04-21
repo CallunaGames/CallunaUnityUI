@@ -169,5 +169,35 @@ namespace Calluna.UI.Tests
             Assert.AreEqual(0, first);
             Assert.LessOrEqual(last, 2); // row 1 must not be included
         }
+
+        // ── ComputeContentSize: negative itemCount ───────────────────────────────
+
+        [TestCase(-1)]
+        [TestCase(-5)]
+        [TestCase(-100)]
+        [Description("ComputeContentSize with negative itemCount => returns Vector2.zero (same as zero)?")]
+        public void GridScrollLayout_ComputeContentSize_NegativeItemCount_ReturnsZero(int itemCount)
+        {
+            var layout = Make(3, 100, 50);
+            Assert.AreEqual(Vector2.zero, layout.ComputeContentSize(itemCount));
+        }
+
+        // ── GetVisibleIndexRange: middle window of a long list ───────────────────
+
+        [Test]
+        [Description("GetVisibleIndexRange with viewport over only the middle rows => first and last indices are both bounded away from the extremes?")]
+        public void GridScrollLayout_GetVisibleIndexRange_ViewportShowsMiddleRows_ExcludesTopAndBottomRows()
+        {
+            // 10 items, 2 columns, cellH=50, no spacing/padding.
+            // Row 0: y [0, -50],  Row 1: y [-50, -100],  Row 2: y [-100, -150],
+            // Row 3: y [-150, -200],  Row 4: y [-200, -250].
+            // Viewport: yMax=-51, yMin=-199 (height=148) — 1px below row 0's bottom, 1px above row 4's top.
+            // firstRow = ceil((51-50)/50) = ceil(0.02) = 1 → first index = 2
+            // lastRow  = floor(199/50)    = floor(3.98) = 3 → last index  = 7
+            var layout = Make(2, 100, 50);
+            (int first, int last) = layout.GetVisibleIndexRange(10, new Rect(0, -199, 200, 148));
+            Assert.AreEqual(2, first);
+            Assert.AreEqual(7, last);
+        }
     }
 }
