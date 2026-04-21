@@ -1,12 +1,12 @@
 {
   "name": "com.calluna.ui",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "displayName": "Calluna Unity UI",
   "description": "UI basics for Calluna Games Unity projects",
   "unity": "6000.33",
   "unityRelease": "",
   "documentationUrl": "https://github.com/CallunaGames/CallunaUnityUI",
-  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityUI/compare/v1.5.0...v1.6.0",
+  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityUI/compare/v1.6.0...v1.7.0",
   "licensesUrl": "",
   "dependencies": {
     "com.calluna.core": "1.2.0",
@@ -32,6 +32,11 @@
       "displayName": "Virtual Scroll UI",
       "description": "Example of a virtualised grid scroll view with live data updates",
       "path": "Samples~/VirtualScrollUI"
+    },
+    {
+      "displayName": "Bounds Constraint Applier",
+      "description": "Example of constraining a draggable UI element within a bounds region",
+      "path": "Samples~/BoundsConstraintApplier"
     }
   ],
   "keywords": [

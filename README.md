@@ -167,7 +167,21 @@ rollingNumber
 
 ### Bounds Constrainer
 
-`UIBoundsConstrainer` clamps any `RectTransform` so it stays inside a configured bounds region. It is used by `DragableUI` for drag clamping, and can be used standalone to snap UI elements (such as tooltips) into screen or panel bounds.
+`UIBoundsConstrainer` clamps any `RectTransform` so it stays inside a configured bounds region. It is used by `DragableUI` for drag clamping, and can be used standalone to keep UI elements (such as tooltips or floating panels) within a screen or panel region.
+
+**Class hierarchy:**
+
+```
+IUIBoundsConstrainer
+    UIBoundsConstrainer : MonoBehaviour, Injectable, IUIBoundsConstrainer
+```
+
+**`IUIBoundsConstrainer`** — readonly interface for bounds clamping:
+- `Rect? GetBoundsRect()` — returns the current bounds as a world-space `Rect`, or `null` when no bounds region is set.
+- `void Clamp(RectTransform target)` — repositions `target` in world space so it fits within the bounds region.
+
+**`UIBoundsConstrainer`** additionally exposes:
+- `static Vector2 ClampPositionToBounds(Vector2 position, Vector2 size, Vector2 pivot, Rect bounds)` — pure-geometry helper; usable without a MonoBehaviour instance.
 
 Configure via `UIBoundsConstrainerInstaller` (a `MonoInstaller`):
 
@@ -175,14 +189,40 @@ Configure via `UIBoundsConstrainerInstaller` (a `MonoInstaller`):
 |---|---|---|
 | `Bounds` | `RectTransform` (optional) | Region to clamp inside; no clamping applied when `null` |
 
-The component implements `IUIBoundsConstrainer` and exposes:
-- `Clamp(RectTransform target)` — repositions `target` so it fits within the bounds region (world-space, operates in-place)
-- `GetBoundsRect()` — returns the bounds as a world-space `Rect?`
-- `ClampPositionToBounds(Vector2, Vector2, Vector2, Rect)` — static pure-geometry helper; usable without a MonoBehaviour instance
+```
+GameObjectContext
+└── UIBoundsConstrainerInstaller    (assign Bounds RectTransform in Inspector)
+```
+
+#### Usage: standalone bounds clamping with UIBoundsConstraintApplier
+
+`UIBoundsConstraintApplier` is a lightweight `MonoBehaviour` that resolves a `UIBoundsConstrainer` from DI and calls `Clamp(_target)` every `LateUpdate`. Use it to keep any UI element — a tooltip, floating label, or context menu — inside the bounds region without writing a custom component.
+
+```csharp
+// No installer needed for UIBoundsConstraintApplier itself.
+// Add it to the target GameObject in the same DI context as UIBoundsConstrainerInstaller.
+// The [SerializeField] _target field auto-populates via Reset() to the component's own RectTransform,
+// or assign a different RectTransform in the Inspector.
+```
+
+**Scene hierarchy:**
 
 ```
 GameObjectContext
-└── UIBoundsConstrainerInstaller    (assign Bounds RectTransform)
+├── UIBoundsConstrainerInstaller    (assign Bounds RectTransform)
+└── Panel
+    └── UIBoundsConstraintApplier   (assign Target RectTransform; defaults to own RectTransform)
+```
+
+#### Usage: static geometry helper
+
+```csharp
+Vector2 clamped = UIBoundsConstrainer.ClampPositionToBounds(
+    position:  (Vector2)myRect.position,
+    size:      myRect.rect.size * (Vector2)myRect.lossyScale,
+    pivot:     myRect.pivot,
+    bounds:    boundsRect);
+myRect.position = new Vector3(clamped.x, clamped.y, myRect.position.z);
 ```
 
 ---
@@ -199,7 +239,7 @@ Configure via `DragableUIInstaller` (a `MonoInstaller`). Its serialized fields m
 | `BoundTransform` | `RectTransform` (optional) | Override which rect is measured against bounds (defaults to `TransformToDrag`) |
 | `MoveAxis` | `RectTransform.Axis?` (optional) | Lock movement to Horizontal or Vertical; `null` for free movement |
 
-Bounds clamping requires a `UIBoundsConstrainerInstaller` in the same DI context — `DragableUI` resolves `IUIBoundsConstrainer` from DI. Omit `UIBoundsConstrainerInstaller` for unclamped dragging.
+Bounds clamping requires a `UIBoundsConstrainerInstaller` in the same DI context — `DragableUI` resolves `UIBoundsConstrainer` from DI via `ResolveOptional`. Omit `UIBoundsConstrainerInstaller` for unclamped dragging.
 
 `DragableUI` exposes `OnDragStart` and `OnDragEnd` events (both `Action<Vector2>`). `LimitToBounds(Vector2 delta)` is `protected virtual` — subclass `DragableUI` to customise clamping behaviour.
 
@@ -363,3 +403,4 @@ The following importable samples are available via the Unity Package Manager.
 | **Dragable UI** | Drag example with event logging |
 | **Advanced UI** | `RollingNumber` with fluent builder configuration and easing |
 | **Virtual Scroll UI** | Virtualised grid scroll view with live data insertion and removal |
+| **Bounds Constraint Applier** | Demonstrates `UIBoundsConstraintApplier` keeping a moving panel inside a bounds region using a `BoundsConstraintMoverTester` script |

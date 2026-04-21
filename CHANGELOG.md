@@ -1,3 +1,14 @@
+## [1.7.0] - 2026-04-21
+
+### Added
+- `UIBoundsConstraintApplier` — `MonoBehaviour` and `Injectable` that resolves `UIBoundsConstrainer` from DI and calls `Clamp(_target)` each `LateUpdate`. The target `RectTransform` is configured via a `[SerializeField]` Inspector field; no installer is required.
+- `BoundsConstraintApplier` sample — demonstrates `UIBoundsConstraintApplier` driving a `RectTransform` along a Lissajous path that exceeds the configured bounds, showing the clamping in action.
+
+### Changed
+- `DragableUI` now resolves `IUIBoundsConstrainer` as an optional dependency. Scenes that have no `UIBoundsConstrainerInstaller` in the DI context no longer require a bounds binding to be present; dragging proceeds unclamped when none is registered.
+
+---
+
 ## [1.6.0] - 2026-04-21
 
 ### Breaking Changes
