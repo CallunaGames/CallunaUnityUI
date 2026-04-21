@@ -6,7 +6,8 @@ This Unity package implements reactive UI MonoBehaviours built on Calluna's Obse
 - Displaying values via text labels and progress bars
 - Inputting values via input fields, sliders, dropdowns, and toggles
 - Animated number transitions (rolling numbers)
-- Draggable UI panels
+- Draggable UI panels with optional bounds clamping
+- Keeping UI elements (tooltips, panels) within a bounds region
 - ScriptableObject-based color theming
 - Virtualised scrollable views (grid, vertical list, horizontal list) for large or unbounded lists
 
@@ -105,7 +106,7 @@ ScriptableObject-based color theming. At runtime, a single `Observable<ColorStyl
 | Type | Description |
 |---|---|
 | `ColorStyleId` | Type-safe `ScriptableObject` asset reference identifying a named color slot |
-| `ColorStyleSettings` | `ScriptableObject` that maps `ColorStyleId` → `Color`; call `GetColorOf(id)` or `TryGetColorOf(id, out color)` |
+| `ColorStyleSettings` | `ScriptableObject` that maps `ColorStyleId` → `Color`; call `TryGetColorOf(id, out color)` to look up a color |
 | `ApplyColorStyle` | `MonoBehaviour` — resolves `ReadonlyObservable<ColorStyleSettings>` and sets a `Graphic` component's color whenever the active settings change |
 | `SetColorStylesButton` | Mutates the `Observable<ColorStyleSettings>` to a configured preset on click |
 | `ClearColorStylesButton` | Clears the `Observable<ColorStyleSettings>` (reverts graphics to their initial colors) |
@@ -164,26 +165,50 @@ rollingNumber
 
 ---
 
+### Bounds Constrainer
+
+`UIBoundsConstrainer` clamps any `RectTransform` so it stays inside a configured bounds region. It is used by `DragableUI` for drag clamping, and can be used standalone to snap UI elements (such as tooltips) into screen or panel bounds.
+
+Configure via `UIBoundsConstrainerInstaller` (a `MonoInstaller`):
+
+| Field | Type | Description |
+|---|---|---|
+| `Bounds` | `RectTransform` (optional) | Region to clamp inside; no clamping applied when `null` |
+
+The component implements `IUIBoundsConstrainer` and exposes:
+- `Clamp(RectTransform target)` — repositions `target` so it fits within the bounds region (world-space, operates in-place)
+- `GetBoundsRect()` — returns the bounds as a world-space `Rect?`
+- `ClampPositionToBounds(Vector2, Vector2, Vector2, Rect)` — static pure-geometry helper; usable without a MonoBehaviour instance
+
+```
+GameObjectContext
+└── UIBoundsConstrainerInstaller    (assign Bounds RectTransform)
+```
+
+---
+
 ### Drag
 
-`DragableUI` makes any `RectTransform` draggable within its parent, with optional bounds clamping and axis locking.
+`DragableUI` makes any `RectTransform` draggable, with optional bounds clamping via `UIBoundsConstrainer` and optional axis locking.
 
 Configure via `DragableUIInstaller` (a `MonoInstaller`). Its serialized fields map directly to the `DragableUI.Arguments` struct:
 
 | Field | Type | Description |
 |---|---|---|
 | `TransformToDrag` | `RectTransform` | The transform that moves on drag |
-| `Bounds` | `RectTransform` (optional) | Region the element is clamped inside |
 | `BoundTransform` | `RectTransform` (optional) | Override which rect is measured against bounds (defaults to `TransformToDrag`) |
 | `MoveAxis` | `RectTransform.Axis?` (optional) | Lock movement to Horizontal or Vertical; `null` for free movement |
 
-`DragableUI` exposes `OnDragStart` and `OnDragEnd` events (both `Action<Vector2>`). `LimitToBounds(Vector2 delta)` and `GetBoundsRect()` are `protected virtual` — subclass `DragableUI` to customise clamping behaviour.
+Bounds clamping requires a `UIBoundsConstrainerInstaller` in the same DI context — `DragableUI` resolves `IUIBoundsConstrainer` from DI. Omit `UIBoundsConstrainerInstaller` for unclamped dragging.
+
+`DragableUI` exposes `OnDragStart` and `OnDragEnd` events (both `Action<Vector2>`). `LimitToBounds(Vector2 delta)` is `protected virtual` — subclass `DragableUI` to customise clamping behaviour.
 
 ```
 GameObjectContext
-└── DragableUIInstaller    (set Bounds / MoveAxis if needed)
+├── UIBoundsConstrainerInstaller    (optional — assign Bounds to enable clamping)
+└── DragableUIInstaller             (set BoundTransform / MoveAxis if needed)
 Panel
-└── DragableUI             (drag target)
+└── DragableUI                      (drag target)
 ```
 
 ---

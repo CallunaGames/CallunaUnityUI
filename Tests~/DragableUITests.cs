@@ -16,7 +16,7 @@ namespace Calluna.UI.Tests
         public void DragableUI_ClampPositionToBounds_InsideBounds_Unchanged()
         {
             Vector2 position = new Vector2(100f, 50f);
-            Vector2 result = DragableUI.ClampPositionToBounds(position, Size, Pivot, Bounds);
+            Vector2 result = UIBoundsConstrainer.ClampPositionToBounds(position, Size, Pivot, Bounds);
             Assert.AreEqual(position, result);
         }
 
@@ -25,7 +25,7 @@ namespace Calluna.UI.Tests
         {
             // Element centre at x=5 → left edge at 5 - 20 = -15, outside bounds min x=0.
             Vector2 position = new Vector2(5f, 50f);
-            Vector2 result = DragableUI.ClampPositionToBounds(position, Size, Pivot, Bounds);
+            Vector2 result = UIBoundsConstrainer.ClampPositionToBounds(position, Size, Pivot, Bounds);
             Assert.AreEqual(20f, result.x, 0.0001f); // centre pushed right so left edge = 0
             Assert.AreEqual(50f, result.y, 0.0001f);
         }
@@ -35,7 +35,7 @@ namespace Calluna.UI.Tests
         {
             // Element centre at x=195 → right edge at 195 + 20 = 215, outside bounds max x=200.
             Vector2 position = new Vector2(195f, 50f);
-            Vector2 result = DragableUI.ClampPositionToBounds(position, Size, Pivot, Bounds);
+            Vector2 result = UIBoundsConstrainer.ClampPositionToBounds(position, Size, Pivot, Bounds);
             Assert.AreEqual(180f, result.x, 0.0001f); // centre pulled left so right edge = 200
             Assert.AreEqual(50f, result.y, 0.0001f);
         }
@@ -45,7 +45,7 @@ namespace Calluna.UI.Tests
         {
             // Element centre at y=95 → top edge at 95 + 10 = 105, outside bounds max y=100.
             Vector2 position = new Vector2(100f, 95f);
-            Vector2 result = DragableUI.ClampPositionToBounds(position, Size, Pivot, Bounds);
+            Vector2 result = UIBoundsConstrainer.ClampPositionToBounds(position, Size, Pivot, Bounds);
             Assert.AreEqual(100f, result.x, 0.0001f);
             Assert.AreEqual(90f,  result.y, 0.0001f); // centre pulled down so top edge = 100
         }
@@ -55,7 +55,7 @@ namespace Calluna.UI.Tests
         {
             // Element centre at y=5 → bottom edge at 5 - 10 = -5, outside bounds min y=0.
             Vector2 position = new Vector2(100f, 5f);
-            Vector2 result = DragableUI.ClampPositionToBounds(position, Size, Pivot, Bounds);
+            Vector2 result = UIBoundsConstrainer.ClampPositionToBounds(position, Size, Pivot, Bounds);
             Assert.AreEqual(100f, result.x, 0.0001f);
             Assert.AreEqual(10f,  result.y, 0.0001f); // centre pushed up so bottom edge = 0
         }
@@ -64,7 +64,7 @@ namespace Calluna.UI.Tests
         public void DragableUI_ClampPositionToBounds_OverflowsBothAxes_ClampsOnBothAxes()
         {
             Vector2 position = new Vector2(-50f, -50f);
-            Vector2 result = DragableUI.ClampPositionToBounds(position, Size, Pivot, Bounds);
+            Vector2 result = UIBoundsConstrainer.ClampPositionToBounds(position, Size, Pivot, Bounds);
             Assert.AreEqual(20f, result.x, 0.0001f);
             Assert.AreEqual(10f, result.y, 0.0001f);
         }
@@ -76,7 +76,7 @@ namespace Calluna.UI.Tests
             // Element 40×20 placed at (0,100) — top-left corner exactly on top-left of bounds.
             Vector2 pivot    = new Vector2(0f, 1f);
             Vector2 position = new Vector2(0f, 100f);
-            Vector2 result = DragableUI.ClampPositionToBounds(position, Size, pivot, Bounds);
+            Vector2 result = UIBoundsConstrainer.ClampPositionToBounds(position, Size, pivot, Bounds);
             Assert.AreEqual(position, result);
         }
 
@@ -86,7 +86,7 @@ namespace Calluna.UI.Tests
             // Top-left pivot: position is top-left corner. At x=-10, left edge is outside.
             Vector2 pivot    = new Vector2(0f, 1f);
             Vector2 position = new Vector2(-10f, 50f);
-            Vector2 result = DragableUI.ClampPositionToBounds(position, Size, pivot, Bounds);
+            Vector2 result = UIBoundsConstrainer.ClampPositionToBounds(position, Size, pivot, Bounds);
             Assert.AreEqual(0f, result.x, 0.0001f);
         }
     }
