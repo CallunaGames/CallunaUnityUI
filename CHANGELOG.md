@@ -1,3 +1,10 @@
+## [1.7.2] - 2026-04-24
+
+### Fixed
+- `VirtualScrollBase` and `VirtualScrollView` now subscribe to `OnApplicationQuit` and tear down all subscriptions immediately when the application exits, before DI teardown begins. This prevents callbacks from firing against partially-destroyed DI contexts during quit.
+
+---
+
 ## [1.7.1] - 2026-04-24
 
 ### Fixed

@@ -48,11 +48,22 @@ namespace Calluna.UI
 
         void Cleanable.Clean()
         {
+            UnsubscribeItems();
+            CleanBase();
+        }
+
+        protected override void OnApplicationQuit()
+        {
+            UnsubscribeItems();
+            base.OnApplicationQuit();
+        }
+
+        private void UnsubscribeItems()
+        {
             _items.OnItemAdded    -= OnItemAdded;
             _items.OnItemRemoved  -= OnItemRemoved;
             _items.OnItemReplaced -= OnItemReplaced;
             _items.OnItemsSwapped -= OnItemsSwapped;
-            CleanBase();
         }
 
         protected override TItem RequestItem(int index)

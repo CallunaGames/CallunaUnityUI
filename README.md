@@ -28,7 +28,19 @@ The package is dependent on the following packages. Please make sure to import t
 
 Value displays subscribe to a `ReadonlyObservable<T>` injected via DI and update automatically when the value changes.
 
-Supported value types: `float`, `int`, `string`, `double`, `long`
+**Class hierarchy:**
+
+```
+ObservableValueTextDisplay<TValue> : MonoBehaviour, Injectable, Initializable, Cleanable
+    FloatTextDisplay
+    IntTextDisplay
+    StringTextDisplay
+    DoubleTextDisplay
+    LongTextDisplay
+
+ProgressBar                  : MonoBehaviour, Injectable, Initializable, Cleanable
+FilledImageProgressDisplay   : MonoBehaviour, Injectable, Initializable, Cleanable
+```
 
 **Text displays** (`FloatTextDisplay`, `IntTextDisplay`, `StringTextDisplay`, `DoubleTextDisplay`, `LongTextDisplay`)  
 Render the value into a `TextMeshProUGUI` component using a configurable format string. The format string is applied via `IFormattable.ToString(format, culture)`. A `CultureInfo` may be optionally bound in the DI context; when absent, `CultureInfo.InvariantCulture` is used.
@@ -63,6 +75,21 @@ public class MyInstaller : MonoInstaller
 ### Value Input
 
 Input components resolve `Observable<TValue>` from DI and provide two-way binding: the component displays the current value and writes back to the observable when the user interacts with it.
+
+**Class hierarchy:**
+
+```
+BasicInput<TValue> : MonoBehaviour, Injectable, Initializable, Cleanable
+    TextInput<TValue>
+        FloatInput
+        IntInput
+        StringInput
+    SliderInput<TValue>
+        FloatSlider
+        IntSlider
+    ToggleInput
+    BasicDropdown
+```
 
 | Component | Backed by | Value type |
 |---|---|---|
@@ -107,7 +134,7 @@ ScriptableObject-based color theming. At runtime, a single `Observable<ColorStyl
 |---|---|
 | `ColorStyleId` | Type-safe `ScriptableObject` asset reference identifying a named color slot |
 | `ColorStyleSettings` | `ScriptableObject` that maps `ColorStyleId` → `Color`; call `TryGetColorOf(id, out color)` to look up a color (returns `false` when the id is absent), or `GetColorOf(id)` to look up and throw when absent |
-| `ApplyColorStyle` | `MonoBehaviour` — resolves `ReadonlyObservable<ColorStyleSettings>` and sets a `Graphic` component's color whenever the active settings change |
+| `ApplyColorStyle` | `MonoBehaviour` — resolves `ReadonlyObservable<ColorStyleSettings>` and sets a `Graphic` component's color whenever the active settings change. When the observable has no value or the `ColorStyleId` is not present in the settings, the `Graphic` reverts to its color at `Initialize()` time |
 | `SetColorStylesButton` | Mutates the `Observable<ColorStyleSettings>` to a configured preset on click |
 | `ClearColorStylesButton` | Clears the `Observable<ColorStyleSettings>` (reverts graphics to their initial colors) |
 
@@ -124,7 +151,7 @@ public class ThemeInstaller : MonoInstaller
 
     public override void InstallBindings(Binder binder)
     {
-        var observable = new Observable<ColorStyleSettings>(_theme);
+        var observable = new Observable<ColorStyleSettings> { Value = _theme };
         binder.Bind<Observable<ColorStyleSettings>>()
               .And<ReadonlyObservable<ColorStyleSettings>>()
               .ToInstance(observable);
@@ -140,6 +167,14 @@ public class ThemeInstaller : MonoInstaller
 ### Rolling Number
 
 `FloatRollingNumber` and `IntRollingNumber` animate a `TextMeshProUGUI` label smoothly from its current value to a new one whenever the bound observable changes.
+
+**Class hierarchy:**
+
+```
+RollingNumber<T> : MonoBehaviour, Injectable, Initializable, Cleanable
+    FloatRollingNumber : RollingNumber<float>
+    IntRollingNumber   : RollingNumber<int>
+```
 
 Configured via a fluent builder API. Always call `Apply()` at the end of the builder chain to start (or restart) the display. When `WithValue()` is called before the DI container runs `Initialize()`, the `Initialize()` callback will call `Apply()` automatically — but the common pattern is to configure the component inside another component's `Initialize()` and then call `Apply()` explicitly.
 
@@ -161,6 +196,8 @@ rollingNumber
 | `WithFormat(Func<T,string>)` | Custom display formatter |
 | `WithRollOnInit(bool)` | When `true`, the number animates in from zero on first display |
 
+`Apply()` throws `InvalidOperationException` if called before `WithValue()`.
+
 **DI requirements:** `CoroutineHelper` (provided by Calluna Core) must be bound in the same context.
 
 ---
@@ -176,11 +213,11 @@ IUIBoundsConstrainer
     UIBoundsConstrainer : MonoBehaviour, Injectable, IUIBoundsConstrainer
 ```
 
-**`IUIBoundsConstrainer`** — readonly interface for bounds clamping:
+**`IUIBoundsConstrainer`** — interface for bounds clamping:
 - `Rect? GetBoundsRect()` — returns the current bounds as a world-space `Rect`, or `null` when no bounds region is set.
 - `void Clamp(RectTransform target)` — repositions `target` in world space so it fits within the bounds region.
 
-**`UIBoundsConstrainer`** additionally exposes:
+**`UIBoundsConstrainer`** implements both interface methods as `virtual`, so they can be overridden in subclasses for custom clamping logic. It additionally exposes:
 - `static Vector2 ClampPositionToBounds(Vector2 position, Vector2 size, Vector2 pivot, Rect bounds)` — pure-geometry helper; usable without a MonoBehaviour instance.
 
 Configure via `UIBoundsConstrainerInstaller` (a `MonoInstaller`):

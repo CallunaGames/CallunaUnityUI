@@ -138,6 +138,8 @@ namespace Calluna.UI
             _scrollRect = GetComponent<ScrollRect>();
         }
 
+        protected virtual void OnApplicationQuit() => CleanBase();
+
         protected virtual void LateUpdate()
         {
             if (!_initialized) return;
