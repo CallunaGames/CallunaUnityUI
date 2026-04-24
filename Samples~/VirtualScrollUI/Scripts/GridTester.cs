@@ -12,7 +12,6 @@ namespace Calluna.UI.Samples.VirtualScrollUI
     {
         [SerializeField] private Button _addButton;
         [SerializeField] private Button _removeButton;
-        [SerializeField] private Button _removeFirstButton;
         [SerializeField] private int    _initialItemCount = 200;
 
         private ObservableList<ItemData> _items;
@@ -26,7 +25,6 @@ namespace Calluna.UI.Samples.VirtualScrollUI
         {
             _addButton.onClick.AddListener(AddItem);
             _removeButton.onClick.AddListener(RemoveLastItem);
-            _removeFirstButton.onClick.AddListener(RemoveFirstItem);
 
             for (int i = 0; i < _initialItemCount; i++)
                 _items.Add(CreateItem(i));
@@ -36,7 +34,6 @@ namespace Calluna.UI.Samples.VirtualScrollUI
         {
             _addButton.onClick.RemoveListener(AddItem);
             _removeButton.onClick.RemoveListener(RemoveLastItem);
-            _removeFirstButton.onClick.RemoveListener(RemoveFirstItem);
         }
 
         private void AddItem()
@@ -48,12 +45,6 @@ namespace Calluna.UI.Samples.VirtualScrollUI
         {
             if (_items.Count > 0)
                 _items.RemoveAt(_items.Count - 1);
-        }
-
-        private void RemoveFirstItem()
-        {
-            if (_items.Count > 0)
-                _items.RemoveAt(0);
         }
 
         private static ItemData CreateItem(int index) => new ItemData

@@ -31,7 +31,7 @@ Value displays subscribe to a `ReadonlyObservable<T>` injected via DI and update
 Supported value types: `float`, `int`, `string`, `double`, `long`
 
 **Text displays** (`FloatTextDisplay`, `IntTextDisplay`, `StringTextDisplay`, `DoubleTextDisplay`, `LongTextDisplay`)  
-Render the value into a `TextMeshProUGUI` component using a configurable format string.
+Render the value into a `TextMeshProUGUI` component using a configurable format string. The format string is applied via `IFormattable.ToString(format, culture)`. A `CultureInfo` may be optionally bound in the DI context; when absent, `CultureInfo.InvariantCulture` is used.
 
 **Progress displays**
 - `ProgressBar` — drives a `UnityEngine.UI.Slider` from a `ReadonlyObservable<float>` in the 0–1 range.
@@ -76,7 +76,7 @@ Input components resolve `Observable<TValue>` from DI and provide two-way bindin
 
 `BasicDropdown` additionally resolves a `ReadonlyObservableList<TMP_Dropdown.OptionData>` for the option list, and reacts live to list changes using `ObservableListChangeDetector<T>`.
 
-`TextInput` subclasses emit a `Debug.LogWarning` and fire the `ParsingFailed` event (`Action<string>`) when input cannot be parsed. Override `OnParseFailure(string)` for custom error handling beyond the event.
+`TextInput` subclasses emit a `Debug.LogWarning` and fire the `ParsingFailed` event (`Action<string>`) when input cannot be parsed. Override `OnParseFailure(string)` for custom error handling beyond the event. Text inputs also optionally resolve a `CultureInfo` from DI for number formatting; when absent, `CultureInfo.InvariantCulture` is used.
 
 #### Example: Int input field
 
@@ -106,7 +106,7 @@ ScriptableObject-based color theming. At runtime, a single `Observable<ColorStyl
 | Type | Description |
 |---|---|
 | `ColorStyleId` | Type-safe `ScriptableObject` asset reference identifying a named color slot |
-| `ColorStyleSettings` | `ScriptableObject` that maps `ColorStyleId` → `Color`; call `TryGetColorOf(id, out color)` to look up a color |
+| `ColorStyleSettings` | `ScriptableObject` that maps `ColorStyleId` → `Color`; call `TryGetColorOf(id, out color)` to look up a color (returns `false` when the id is absent), or `GetColorOf(id)` to look up and throw when absent |
 | `ApplyColorStyle` | `MonoBehaviour` — resolves `ReadonlyObservable<ColorStyleSettings>` and sets a `Graphic` component's color whenever the active settings change |
 | `SetColorStylesButton` | Mutates the `Observable<ColorStyleSettings>` to a configured preset on click |
 | `ClearColorStylesButton` | Clears the `Observable<ColorStyleSettings>` (reverts graphics to their initial colors) |
@@ -141,7 +141,7 @@ public class ThemeInstaller : MonoInstaller
 
 `FloatRollingNumber` and `IntRollingNumber` animate a `TextMeshProUGUI` label smoothly from its current value to a new one whenever the bound observable changes.
 
-Configured via a fluent builder API. When used with DI the component initialises automatically; when used without DI call `Apply()` explicitly after the builder chain.
+Configured via a fluent builder API. Always call `Apply()` at the end of the builder chain to start (or restart) the display. When `WithValue()` is called before the DI container runs `Initialize()`, the `Initialize()` callback will call `Apply()` automatically — but the common pattern is to configure the component inside another component's `Initialize()` and then call `Apply()` explicitly.
 
 ```csharp
 rollingNumber
@@ -150,7 +150,7 @@ rollingNumber
     .WithEase(Tween.EaseOutCubic)
     .WithFormat(v => v.ToString("F2"))
     .WithRollOnInit()
-    .Apply(); // only needed when DI is not in use
+    .Apply();
 ```
 
 | Builder method | Description |
@@ -233,11 +233,12 @@ myRect.position = new Vector3(clamped.x, clamped.y, myRect.position.z);
 
 Configure via `DragableUIInstaller` (a `MonoInstaller`). Its serialized fields map directly to the `DragableUI.Arguments` struct:
 
-| Field | Type | Description |
+| Inspector field | Type | Description |
 |---|---|---|
-| `TransformToDrag` | `RectTransform` | The transform that moves on drag |
-| `BoundTransform` | `RectTransform` (optional) | Override which rect is measured against bounds (defaults to `TransformToDrag`) |
-| `MoveAxis` | `RectTransform.Axis?` (optional) | Lock movement to Horizontal or Vertical; `null` for free movement |
+| `Dragable Transform` | `RectTransform` | The transform that moves on drag |
+| `Bound Transform` | `RectTransform` (optional) | Override which rect is measured against bounds (defaults to `Dragable Transform`) |
+| `Limit Axis` | `bool` | Enable axis locking |
+| `Move Axis` | `RectTransform.Axis` | Active when `Limit Axis` is ticked — locks movement to Horizontal or Vertical |
 
 Bounds clamping requires a `UIBoundsConstrainerInstaller` in the same DI context — `DragableUI` resolves `UIBoundsConstrainer` from DI via `ResolveOptional`. Omit `UIBoundsConstrainerInstaller` for unclamped dragging.
 

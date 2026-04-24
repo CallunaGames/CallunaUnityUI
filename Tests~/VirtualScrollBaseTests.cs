@@ -1,0 +1,384 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.UI;
+using Object = UnityEngine.Object;
+
+namespace Calluna.UI.Tests
+{
+    /// <summary>
+    /// Tests for VirtualScrollBase lifecycle behaviour.
+    ///
+    /// FakeScrollBase overrides GetViewportRect to return a fixed rect, bypassing
+    /// GetWorldCorners (which requires a canvas stack). ViewportRectCallCount is used
+    /// as the observable signal for whether RefreshVisibleItems fired.
+    ///
+    /// Tests that need real active items use ItemCount > 0 with
+    /// new GameObject("…", typeof(RectTransform)) for pool items, which avoids the
+    /// Transform/RectTransform incompatibility. Items are parented to the scroll root
+    /// so TearDown cleans them up automatically.
+    ///
+    /// LateUpdate reads _scrollRect.viewport.rect.size directly. A point-anchored
+    /// RectTransform (anchorMin == anchorMax) returns sizeDelta as rect.size regardless
+    /// of parent, so no Canvas is needed.
+    /// </summary>
+    public class VirtualScrollBaseTests
+    {
+        private GameObject _root;
+        private FakeScrollBase _scroll;
+        private ScrollRect _scrollRect;
+
+        [SetUp]
+        public void SetUp()
+        {
+            // ScrollRect requires a RectTransform on its own GameObject.
+            _root = new GameObject("TestScroll", typeof(RectTransform));
+
+            var viewportGO = new GameObject("Viewport", typeof(RectTransform));
+            viewportGO.transform.SetParent(_root.transform);
+            var viewportRT = viewportGO.GetComponent<RectTransform>();
+            // Point anchors (default 0.5, 0.5): rect.size == sizeDelta regardless of parent.
+            viewportRT.sizeDelta = new Vector2(300f, 200f);
+
+            var contentGO = new GameObject("Content", typeof(RectTransform));
+            contentGO.transform.SetParent(_root.transform);
+
+            _scrollRect = _root.AddComponent<ScrollRect>();
+            _scrollRect.viewport = viewportRT;
+            _scrollRect.content  = contentGO.GetComponent<RectTransform>();
+
+            _scroll = _root.AddComponent<FakeScrollBase>();
+            SetField(_scroll, "_scrollRect", _scrollRect);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Object.DestroyImmediate(_root);
+        }
+
+        // ── Lifecycle guard tests (bugs fixed) ───────────────────────────────────
+
+        [Test]
+        public void VirtualScrollBase_LateUpdateAfterClean_DoesNotCallRefreshVisibleItems()
+        {
+            _scroll.DoInitialize();
+            _scroll.DoLateUpdate();  // consume initial size-cache miss; VRC advances
+            _scroll.DoClean();
+            int countBefore = _scroll.ViewportRectCallCount;
+
+            _scroll.DoLateUpdate(); // _initialized == false → must return immediately
+
+            Assert.AreEqual(countBefore, _scroll.ViewportRectCallCount,
+                "LateUpdate after Clean must not call RefreshVisibleItems");
+        }
+
+        [Test]
+        public void VirtualScrollBase_CleanResetsViewportSizeCache_ReinitializeTriggersSizeChangeRefresh()
+        {
+            _scroll.DoInitialize();
+            _scroll.DoLateUpdate();  // viewport size (300,200) is now in _lastViewportSize
+            _scroll.DoClean();       // fix: resets _lastViewportSize to zero
+            _scroll.DoInitialize();  // Rebuild runs; _lastViewportSize is still zero
+            int countBefore = _scroll.ViewportRectCallCount;
+
+            _scroll.DoLateUpdate(); // (300,200) != (0,0) → size change → RefreshVisibleItems
+
+            Assert.Greater(_scroll.ViewportRectCallCount, countBefore,
+                "LateUpdate after re-initialize must call RefreshVisibleItems because Clean() reset the viewport size cache");
+        }
+
+        // ── InitializeBase ───────────────────────────────────────────────────────
+
+        [Test]
+        public void VirtualScrollBase_InitializeBase_SetsContentRectToTopLeftAnchorAndZeroPosition()
+        {
+            _scroll.DoInitialize();
+
+            RectTransform content = _scrollRect.content;
+            Assert.AreEqual(new Vector2(0f, 1f), content.anchorMin,       "anchorMin");
+            Assert.AreEqual(new Vector2(0f, 1f), content.anchorMax,       "anchorMax");
+            Assert.AreEqual(new Vector2(0f, 1f), content.pivot,           "pivot");
+            Assert.AreEqual(Vector2.zero,         content.anchoredPosition, "anchoredPosition");
+        }
+
+        [Test]
+        public void VirtualScrollBase_InitializeBase_SubscribesScrollEvent_ScrollTriggersRefresh()
+        {
+            _scroll.DoInitialize();
+            int countBefore = _scroll.ViewportRectCallCount;
+
+            _scrollRect.onValueChanged.Invoke(Vector2.zero);
+
+            Assert.Greater(_scroll.ViewportRectCallCount, countBefore,
+                "Scroll event must trigger RefreshVisibleItems after Initialize");
+        }
+
+        // ── CleanBase ────────────────────────────────────────────────────────────
+
+        [Test]
+        public void VirtualScrollBase_CleanBase_RemovesScrollListener_SubsequentScrollDoesNotRefresh()
+        {
+            _scroll.DoInitialize();
+            _scroll.DoClean();
+            int countBefore = _scroll.ViewportRectCallCount;
+
+            _scrollRect.onValueChanged.Invoke(Vector2.zero);
+
+            Assert.AreEqual(countBefore, _scroll.ViewportRectCallCount,
+                "Scroll event must not trigger RefreshVisibleItems after Clean");
+        }
+
+        [Test]
+        public void VirtualScrollBase_CleanBase_ReturnsAllActiveItems()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize(); // activates items 0, 1, 2
+
+            _scroll.DoClean();
+
+            Assert.AreEqual(3, _scroll.ReturnCount);
+        }
+
+        // ── SetDirty ─────────────────────────────────────────────────────────────
+
+        [Test]
+        public void VirtualScrollBase_SetDirty_TriggersRebuildOnNextLateUpdate()
+        {
+            _scroll.DoInitialize();
+            _scroll.DoLateUpdate(); // consume initial size-cache miss
+            int countBefore = _scroll.ViewportRectCallCount;
+
+            _scroll.DoSetDirty();
+            _scroll.DoLateUpdate();
+
+            Assert.Greater(_scroll.ViewportRectCallCount, countBefore,
+                "LateUpdate after SetDirty must call Rebuild → RefreshVisibleItems");
+        }
+
+        [Test]
+        public void VirtualScrollBase_SetDirty_FlagClearedAfterRebuild_SecondLateUpdateDoesNotRebuild()
+        {
+            _scroll.DoInitialize();
+            _scroll.DoLateUpdate();
+            _scroll.DoSetDirty();
+            _scroll.DoLateUpdate(); // rebuild; dirty flag cleared
+            int countAfterRebuild = _scroll.ViewportRectCallCount;
+
+            _scroll.DoLateUpdate(); // no dirty, no size change → no action
+
+            Assert.AreEqual(countAfterRebuild, _scroll.ViewportRectCallCount,
+                "LateUpdate without SetDirty must not trigger another Rebuild");
+        }
+
+        // ── RefreshVisibleItems ──────────────────────────────────────────────────
+
+        [Test]
+        public void VirtualScrollBase_RefreshVisibleItems_ItemsOutsideNewViewport_AreReturned()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize(); // items 0, 1, 2 all visible in the default (300,200) viewport
+
+            // Shrink to only show item 0 (yMin=-39 gives last=floor(39/40)=0)
+            _scroll.SetViewport(new Rect(0, -39, 300, 39));
+            _scrollRect.onValueChanged.Invoke(Vector2.zero);
+
+            Assert.AreEqual(2, _scroll.ReturnCount,
+                "Items 1 and 2 must be returned when they scroll out of the visible range");
+        }
+
+        [Test]
+        public void VirtualScrollBase_RefreshVisibleItems_AlreadyActiveItems_NotRerequested()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+            int requestsAfterInit = _scroll.RequestCount;
+
+            // Same viewport — all items still visible; nothing should be re-requested.
+            _scrollRect.onValueChanged.Invoke(Vector2.zero);
+
+            Assert.AreEqual(requestsAfterInit, _scroll.RequestCount,
+                "RequestItem must not be called for indices already in the active set");
+        }
+
+        // ── ReturnActiveItemAt ───────────────────────────────────────────────────
+
+        [Test]
+        public void VirtualScrollBase_ReturnActiveItemAt_ActiveIndex_CallsReturnItem()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+
+            _scroll.DoReturnActiveItemAt(1);
+
+            Assert.AreEqual(1, _scroll.ReturnCount);
+        }
+
+        [Test]
+        public void VirtualScrollBase_ReturnActiveItemAt_ActiveIndex_RemovedFromActiveSet()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+            _scroll.DoReturnActiveItemAt(1);
+
+            // Second call on the same index must be a no-op — item is already gone.
+            _scroll.DoReturnActiveItemAt(1);
+
+            Assert.AreEqual(1, _scroll.ReturnCount,
+                "Second ReturnActiveItemAt on the same index must not call ReturnItem again");
+        }
+
+        [Test]
+        public void VirtualScrollBase_ReturnActiveItemAt_InactiveIndex_DoesNothing()
+        {
+            _scroll.DoInitialize(); // ItemCount=0, no active items
+
+            Assert.DoesNotThrow(() => _scroll.DoReturnActiveItemAt(5));
+            Assert.AreEqual(0, _scroll.ReturnCount);
+        }
+
+        // ── ReplaceActiveItem ────────────────────────────────────────────────────
+
+        [Test]
+        public void VirtualScrollBase_ReplaceActiveItem_ActiveIndex_ReturnsThenRequestsForSameIndex()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize(); // RequestCount=3, ReturnCount=0
+
+            _scroll.DoReplaceActiveItem(1);
+
+            Assert.AreEqual(1, _scroll.ReturnCount,  "must return the old item");
+            Assert.AreEqual(4, _scroll.RequestCount, "must request a fresh replacement");
+        }
+
+        [Test]
+        public void VirtualScrollBase_ReplaceActiveItem_InactiveIndex_DoesNothing()
+        {
+            _scroll.DoInitialize(); // ItemCount=0
+
+            Assert.DoesNotThrow(() => _scroll.DoReplaceActiveItem(5));
+            Assert.AreEqual(0, _scroll.ReturnCount);
+            Assert.AreEqual(0, _scroll.RequestCount);
+        }
+
+        // ── ShiftActiveItems ─────────────────────────────────────────────────────
+
+        [Test]
+        public void VirtualScrollBase_ShiftActiveItems_PositiveDelta_UpdatesPositionsOfShiftedItems()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize(); // items 0,1,2 at positions (0,0),(0,-40),(0,-80)
+
+            _scroll.DoShiftActiveItems(1, +1); // keys 1 and 2 → re-keyed to 2 and 3
+
+            Assert.AreEqual(new Vector2(0f,  -80f), _scroll.RequestedItems[1].anchoredPosition,
+                "item originally at index 1 must be repositioned to index 2");
+            Assert.AreEqual(new Vector2(0f, -120f), _scroll.RequestedItems[2].anchoredPosition,
+                "item originally at index 2 must be repositioned to index 3");
+        }
+
+        [Test]
+        public void VirtualScrollBase_ShiftActiveItems_PositiveDelta_LeavesItemsBelowFromIndexUnchanged()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+
+            _scroll.DoShiftActiveItems(1, +1);
+
+            Assert.AreEqual(new Vector2(0f, 0f), _scroll.RequestedItems[0].anchoredPosition,
+                "item below fromIndex must not be repositioned");
+        }
+
+        [Test]
+        public void VirtualScrollBase_ShiftActiveItems_NegativeDelta_UpdatesPositionsOfShiftedItems()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+            // Mirror the real usage: the removed item is returned before the shift.
+            _scroll.DoReturnActiveItemAt(1);
+
+            _scroll.DoShiftActiveItems(2, -1); // key 2 → re-keyed to 1
+
+            Assert.AreEqual(new Vector2(0f, -40f), _scroll.RequestedItems[2].anchoredPosition,
+                "item originally at index 2 must be repositioned to index 1");
+        }
+
+        // ── Test double ──────────────────────────────────────────────────────────
+
+        private sealed class FakeScrollBase : VirtualScrollBase<RectTransform>
+        {
+            public int ViewportRectCallCount;
+            public int RequestCount;
+            public int ReturnCount;
+            public readonly List<RectTransform> RequestedItems = new List<RectTransform>();
+
+            private Rect _viewport  = new Rect(0, -200, 300, 200);
+            private int  _itemCount;
+
+            public void SetItemCount(int count) => _itemCount = count;
+            public void SetViewport(Rect rect)  => _viewport  = rect;
+
+            protected override int ItemCount => _itemCount;
+
+            protected override RectTransform RequestItem(int index)
+            {
+                RequestCount++;
+                var go = new GameObject($"Item{index}", typeof(RectTransform));
+                go.transform.SetParent(transform); // parented to root → destroyed by TearDown
+                var rt = go.GetComponent<RectTransform>();
+                RequestedItems.Add(rt);
+                return rt;
+            }
+
+            protected override void ReturnItem(RectTransform item)
+            {
+                ReturnCount++;
+                if (item != null)
+                    Object.DestroyImmediate(item.gameObject);
+            }
+
+            // Counts each invocation so tests can detect RefreshVisibleItems calls
+            // without needing world-space coordinates or a Canvas stack.
+            protected override Rect GetViewportRect()
+            {
+                ViewportRectCallCount++;
+                return _viewport;
+            }
+
+            public void DoInitialize()
+            {
+                _layout = new VerticalListScrollLayout(new VerticalListScrollLayout.Settings
+                {
+                    ItemSize = new Vector2(300f, 40f),
+                    Spacing  = 0f,
+                    Padding  = default
+                });
+                InitializeBase();
+            }
+
+            public void DoClean()      => CleanBase();
+            public void DoLateUpdate() => LateUpdate();
+            public void DoSetDirty()   => SetDirty();
+
+            public void DoReturnActiveItemAt(int index) => ReturnActiveItemAt(index);
+            public void DoReplaceActiveItem(int index)  => ReplaceActiveItem(index);
+            public void DoShiftActiveItems(int fromIndex, int delta) => ShiftActiveItems(fromIndex, delta);
+        }
+
+        // ── Reflection helper ────────────────────────────────────────────────────
+
+        private static void SetField(object target, string name, object value)
+        {
+            Type type = target.GetType();
+            FieldInfo field = null;
+            while (field == null && type != null)
+            {
+                field = type.GetField(name, BindingFlags.NonPublic | BindingFlags.Instance);
+                type  = type.BaseType;
+            }
+            field.SetValue(target, value);
+        }
+    }
+}

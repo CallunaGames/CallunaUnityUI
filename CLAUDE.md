@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Package Overview
 
-`com.calluna.ui` (v1.3.2) — A Unity UPM package providing reactive UI MonoBehaviours built on top of Calluna's Observable/DI systems. Targets Unity 6000.33 LTS.
+`com.calluna.ui` (v1.7.0) — A Unity UPM package providing reactive UI MonoBehaviours built on top of Calluna's Observable/DI systems. Targets Unity 6000.33 LTS.
 
 **Dependencies:**
 - `com.calluna.core` — provides `Observable<T>`, `ReadonlyObservable<T>`, `CoroutineHelper`, `ScriptableObjectId`, `ObservableListChangeDetector<T>`

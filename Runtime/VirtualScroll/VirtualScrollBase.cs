@@ -27,6 +27,7 @@ namespace Calluna.UI
         private static readonly Comparison<int> _descendingComparison = (a, b) => b.CompareTo(a);
 
         protected bool _isDirty;
+        private bool _initialized;
         private Vector2 _lastViewportSize;
 
         // ── Overridable by concrete variants ────────────────────────────────────
@@ -56,6 +57,7 @@ namespace Calluna.UI
             _contentRect.pivot            = new Vector2(0f, 1f);
             _contentRect.anchoredPosition = Vector2.zero;
 
+            _initialized = true;
             _scrollRect.onValueChanged.AddListener(OnScrolled);
             Rebuild();
         }
@@ -63,6 +65,10 @@ namespace Calluna.UI
         /// <summary>Call from <c>Clean()</c>. Unsubscribes from scroll and returns all active items.</summary>
         protected void CleanBase()
         {
+            // Guard must be cleared before ReturnAll so LateUpdate cannot re-activate items
+            // while the pool is mid-teardown.
+            _initialized     = false;
+            _lastViewportSize = Vector2.zero;
             _scrollRect.onValueChanged.RemoveListener(OnScrolled);
             ReturnAll();
         }
@@ -134,6 +140,8 @@ namespace Calluna.UI
 
         protected virtual void LateUpdate()
         {
+            if (!_initialized) return;
+
             Vector2 viewportSize = _scrollRect.viewport.rect.size;
             if (viewportSize != _lastViewportSize)
             {

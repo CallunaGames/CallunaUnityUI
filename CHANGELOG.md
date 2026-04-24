@@ -1,3 +1,11 @@
+## [1.7.1] - 2026-04-24
+
+### Fixed
+- `VirtualScrollBase`: `LateUpdate()` could fire after `Clean()` and call `ActivateItem()` against a mid-teardown pool, causing DI injection exceptions. An `_initialized` guard is now set to `false` at the start of `CleanBase()` to block any further `LateUpdate` work.
+- `VirtualScrollBase`: Reopening a scroll view popup a second time showed only the first row of items despite the content size being calculated correctly. `CleanBase()` now resets `_lastViewportSize` to `Vector2.zero` so the first `LateUpdate` after re-initialization detects a size change and triggers `RefreshVisibleItems()`.
+
+---
+
 ## [1.7.0] - 2026-04-21
 
 ### Added

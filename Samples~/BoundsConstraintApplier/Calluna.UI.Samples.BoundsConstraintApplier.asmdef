@@ -2,11 +2,10 @@
     "name": "Calluna.UI.Samples.BoundsConstraintApplier",
     "rootNamespace": "Calluna.UI.BoundsConstraintApplierSample",
     "references": [
-        "GUID:3d5b1a843e90eb44eb1352d7b859bf9b",
-        "GUID:6055be8ebefd69e48b49212b09b47b2f",
-        "GUID:a4e2fcc097ca52d46a2cc62ef3c5e9bf",
-        "Calluna.Core",
-        "Calluna.UI"
+        "Calluna.UI",
+        "Unity.TextMeshPro",
+        "Calluna.DI",
+        "Calluna.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
