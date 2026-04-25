@@ -140,8 +140,8 @@ ScriptableObject-based color theming. At runtime, a single `Observable<ColorStyl
 
 #### Example: Apply a theme color to an Image
 
-1. Create a `ColorStyleId` asset (right-click in Project > Create > Calluna > Color Style Id).
-2. Create a `ColorStyleSettings` asset and assign the ID → color mapping in the Inspector.
+1. Create a `ColorStyleId` asset (right-click in Project > Create > Calluna Games > UI > Color Style > Color Style Id).
+2. Create a `ColorStyleSettings` asset (right-click in Project > Create > Calluna Games > UI > Color Style > Color Style Settings) and assign the ID → color mapping in the Inspector.
 3. In an installer, bind the settings:
 
 ```csharp
@@ -299,13 +299,22 @@ A virtualised scrollable view that only instantiates cells for items currently v
 
 ```
 IScrollLayout
-    GridScrollLayout(Settings)              — top-to-bottom fixed-column grid
-    VerticalListScrollLayout(Settings)      — single-column top-to-bottom list
-    HorizontalListScrollLayout(Settings)    — single-row left-to-right list
+    GridScrollLayout             — top-to-bottom fixed-column grid
+    VerticalListScrollLayout     — single-column top-to-bottom list
+    HorizontalListScrollLayout   — single-row left-to-right list
 
 VirtualScrollBase<TItem>                   — MonoBehaviour, shared scroll/pool/layout logic
     VirtualScrollView<TItem, TData>        — data list from ReadonlyObservableList<TData>
 ```
+
+`IScrollLayout` is a pure-geometry interface. Implement it to create a custom layout:
+
+| Member | Description |
+|---|---|
+| `Vector2 ItemSize { get; }` | Size of a single cell in pixels |
+| `Vector2 ComputeContentSize(int itemCount)` | Total size the content `RectTransform` must be set to |
+| `Vector2 ComputeItemPosition(int index)` | `anchoredPosition` for the cell at `index` (top-left anchor/pivot convention) |
+| `(int first, int last) GetVisibleIndexRange(int itemCount, Rect viewportLocalRect)` | Inclusive index range of cells that overlap the current viewport |
 
 #### Layout types
 
@@ -410,6 +419,8 @@ public class ItemGridInstaller : VirtualScrollGridInstaller
 ```
 
 Add a `MonoPoolInstaller<ItemCell, ItemData>` component to the same context and assign the cell prefab in its Inspector field.
+
+`VirtualScrollView` also resolves `QuitDetector` from DI. This is provided automatically by the DI framework's `AppContext` — no manual binding is needed.
 
 **Step 5 — Scene hierarchy**
 

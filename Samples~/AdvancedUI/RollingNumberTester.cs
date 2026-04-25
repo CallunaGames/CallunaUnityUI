@@ -14,13 +14,13 @@ namespace Calluna.UI.Samples.AdvancedUI
         private Observable<int> _observableInt;
         private Observable<float> _observableFloat;
 
-        public void Inject(Resolver resolver)
+        void Injectable.Inject(Resolver resolver)
         {
             _observableInt = resolver.Resolve<Observable<int>>();
             _observableFloat = resolver.Resolve<Observable<float>>();
         }
 
-        public void Initialize()
+        void Initializable.Initialize()
         {
             _button.onClick.AddListener(OnClick);
             _floatRollingNumber.WithEase(Tween.EaseInCubic)
@@ -33,7 +33,7 @@ namespace Calluna.UI.Samples.AdvancedUI
                 .Apply();
         }
 
-        public void Clean()
+        void Cleanable.Clean()
         {
             _button.onClick.RemoveListener(OnClick);
         }

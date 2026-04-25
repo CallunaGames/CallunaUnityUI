@@ -1,3 +1,10 @@
+## [1.7.3] - 2026-04-25
+
+### Fixed
+- `VirtualScrollView` no longer crashes on application quit when a filter is active. Previously, filter cleanup could modify the observable model list while `VirtualScrollView` was still subscribed, causing it to request new pool items after DI bindings had been torn down. `VirtualScrollView` now resolves `QuitDetector` from DI and unsubscribes all list listeners via `QuitDetector.OnQuit`, which fires before `AppContext` begins teardown.
+
+---
+
 ## [1.7.2] - 2026-04-24
 
 ### Fixed

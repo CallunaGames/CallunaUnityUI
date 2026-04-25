@@ -5,7 +5,8 @@
         "UnityEditor.TestRunner",
         "UnityEngine.TestRunner",
         "Calluna.UI",
-        "Calluna.Core"
+        "Calluna.Core",
+        "Calluna.DI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -15,20 +15,20 @@ namespace Calluna.UI.Samples
         private Observable<int> _intValue;
         private float _delta;
         
-        public void Inject(Resolver resolver)
+        void Injectable.Inject(Resolver resolver)
         {
             _progress = resolver.Resolve<Observable<float>>();
             _intValue = resolver.Resolve<Observable<int>>();
             _label = resolver.Resolve<Observable<string>>();
         }
 
-        public void Initialize()
+        void Initializable.Initialize()
         {
             _delta = _labels.Count > 0 ? 1f / _labels.Count : 1;
             StartCoroutine(RotateLabels());
         }
 
-        public void Clean()
+        void Cleanable.Clean()
         {
             StopAllCoroutines();
         }

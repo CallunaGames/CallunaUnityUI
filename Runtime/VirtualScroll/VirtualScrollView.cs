@@ -20,6 +20,7 @@ namespace Calluna.UI
     ///   <item><see cref="IScrollLayout"/> — any layout implementation</item>
     ///   <item><see cref="Pool{TItem,TData,PrefabInstantiationArguments}"/> — via <c>MonoPoolInstaller&lt;TItem,TData&gt;</c></item>
     ///   <item><see cref="ReadonlyObservableList{TData}"/> — data source</item>
+    ///   <item><see cref="QuitDetector"/> — provided by the DI framework's AppContext</item>
     /// </list>
     /// </summary>
     public abstract class VirtualScrollView<TItem, TData> : VirtualScrollBase<TItem>, Injectable, Initializable, Cleanable
@@ -27,18 +28,21 @@ namespace Calluna.UI
     {
         private Pool<TItem, TData, PrefabInstantiationArguments> _pool;
         private ReadonlyObservableList<TData> _items;
+        private QuitDetector _quitDetector;
 
         protected override int ItemCount => _items.Count;
 
         void Injectable.Inject(Resolver resolver)
         {
-            _layout = resolver.Resolve<IScrollLayout>();
-            _pool   = resolver.Resolve<Pool<TItem, TData, PrefabInstantiationArguments>>();
-            _items  = resolver.Resolve<ReadonlyObservableList<TData>>();
+            _layout       = resolver.Resolve<IScrollLayout>();
+            _pool         = resolver.Resolve<Pool<TItem, TData, PrefabInstantiationArguments>>();
+            _items        = resolver.Resolve<ReadonlyObservableList<TData>>();
+            _quitDetector = resolver.Resolve<QuitDetector>();
         }
 
         void Initializable.Initialize()
         {
+            _quitDetector.OnQuit  += UnsubscribeItems;
             _items.OnItemAdded    += OnItemAdded;
             _items.OnItemRemoved  += OnItemRemoved;
             _items.OnItemReplaced += OnItemReplaced;
@@ -48,14 +52,9 @@ namespace Calluna.UI
 
         void Cleanable.Clean()
         {
+            _quitDetector.OnQuit  -= UnsubscribeItems;
             UnsubscribeItems();
             CleanBase();
-        }
-
-        protected override void OnApplicationQuit()
-        {
-            UnsubscribeItems();
-            base.OnApplicationQuit();
         }
 
         private void UnsubscribeItems()

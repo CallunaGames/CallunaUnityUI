@@ -13,17 +13,17 @@ namespace Calluna.UI.Samples
         private ObservableList<TMP_Dropdown.OptionData> _options;
         private int _index = 0;
         
-        public void Inject(Resolver resolver)
+        void Injectable.Inject(Resolver resolver)
         {
             _options = resolver.Resolve<ObservableList<TMP_Dropdown.OptionData>>();
         }
 
-        public void Initialize()
+        void Initializable.Initialize()
         {
             StartCoroutine(ChangeOptions());
         }
 
-        public void Clean()
+        void Cleanable.Clean()
         {
             StopAllCoroutines();
         }
