@@ -305,6 +305,114 @@ namespace Calluna.UI.Tests
                 "item originally at index 2 must be repositioned to index 1");
         }
 
+        // ── ScrollToIndex ────────────────────────────────────────────────────────
+        //
+        // Geometry: VerticalListScrollLayout, itemHeight=40, spacing=0, no padding.
+        // Viewport: 300×200 (from SetUp).
+        //   contentHeight(n) = n × 40
+        //   maxScrollY(n)    = n × 40 − 200   (positive when n > 5)
+        //   itemTopY(i)      = i × 40
+        //   normY            = 1 − clampedOffsetY / maxScrollY
+
+        [Test]
+        public void VirtualScrollBase_ScrollToIndex_BeforeInitialize_IsNoOp()
+        {
+            // _initialized == false — must return without touching normalizedPosition.
+            Vector2 before = _scrollRect.normalizedPosition;
+
+            _scroll.SetItemCount(20);
+            _scroll.DoScrollToIndex(0, ScrollAlignment.Start);
+
+            Assert.AreEqual(before, _scrollRect.normalizedPosition);
+        }
+
+        [Test]
+        public void VirtualScrollBase_ScrollToIndex_NegativeIndex_IsNoOp()
+        {
+            _scroll.SetItemCount(20);
+            _scroll.DoInitialize();
+            Vector2 before = _scrollRect.normalizedPosition;
+
+            _scroll.DoScrollToIndex(-1, ScrollAlignment.Start);
+
+            Assert.AreEqual(before, _scrollRect.normalizedPosition);
+        }
+
+        [Test]
+        public void VirtualScrollBase_ScrollToIndex_IndexEqualToItemCount_IsNoOp()
+        {
+            _scroll.SetItemCount(20);
+            _scroll.DoInitialize();
+            Vector2 before = _scrollRect.normalizedPosition;
+
+            _scroll.DoScrollToIndex(20, ScrollAlignment.Start);
+
+            Assert.AreEqual(before, _scrollRect.normalizedPosition);
+        }
+
+        [Test]
+        public void VirtualScrollBase_ScrollToIndex_ContentFitsInViewport_NormYUnchanged()
+        {
+            // 3 items × 40 px = 120 px < 200 px viewport → maxScrollY = 0 → no movement.
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+            float before = _scrollRect.normalizedPosition.y;
+
+            _scroll.DoScrollToIndex(0, ScrollAlignment.Start);
+
+            Assert.AreEqual(before, _scrollRect.normalizedPosition.y, 0.0001f);
+        }
+
+        [Test]
+        public void VirtualScrollBase_ScrollToIndex_Start_FirstItem_NormYIsOne()
+        {
+            // 20 items, scroll to top: offset = 0 → normY = 1.
+            _scroll.SetItemCount(20);
+            _scroll.DoInitialize();
+
+            _scroll.DoScrollToIndex(0, ScrollAlignment.Start);
+
+            Assert.AreEqual(1f, _scrollRect.normalizedPosition.y, 0.0001f);
+        }
+
+        [Test]
+        public void VirtualScrollBase_ScrollToIndex_End_LastItem_NormYIsZero()
+        {
+            // 20 items: itemTopY(19)=760, offset = 760+40-200 = 600 = maxScrollY → normY = 0.
+            _scroll.SetItemCount(20);
+            _scroll.DoInitialize();
+
+            _scroll.DoScrollToIndex(19, ScrollAlignment.End);
+
+            Assert.AreEqual(0f, _scrollRect.normalizedPosition.y, 0.0001f);
+        }
+
+        [Test]
+        public void VirtualScrollBase_ScrollToIndex_Center_MiddleItem_NormYBetweenZeroAndOne()
+        {
+            _scroll.SetItemCount(20);
+            _scroll.DoInitialize();
+
+            _scroll.DoScrollToIndex(9, ScrollAlignment.Center);
+
+            float normY = _scrollRect.normalizedPosition.y;
+            Assert.Greater(normY, 0f, "normY must be above 0 for a middle item centred");
+            Assert.Less(normY,    1f, "normY must be below 1 for a middle item centred");
+        }
+
+        [Test]
+        public void VirtualScrollBase_ScrollToIndex_Start_MiddleItem_NormYMatchesExpected()
+        {
+            // 20 items: itemTopY(10) = 400, maxScrollY = 600 → normY = 1 − 400/600 ≈ 0.3333
+            _scroll.SetItemCount(20);
+            _scroll.DoInitialize();
+
+            _scroll.DoScrollToIndex(10, ScrollAlignment.Start);
+
+            float expected = 1f - 400f / 600f;
+            Assert.AreEqual(expected, _scrollRect.normalizedPosition.y, 0.0001f);
+        }
+
         // ── Test double ──────────────────────────────────────────────────────────
 
         private sealed class FakeScrollBase : VirtualScrollBase<RectTransform>
@@ -365,6 +473,7 @@ namespace Calluna.UI.Tests
             public void DoReturnActiveItemAt(int index) => ReturnActiveItemAt(index);
             public void DoReplaceActiveItem(int index)  => ReplaceActiveItem(index);
             public void DoShiftActiveItems(int fromIndex, int delta) => ShiftActiveItems(fromIndex, delta);
+            public void DoScrollToIndex(int index, ScrollAlignment alignment) => ScrollToIndex(index, alignment);
         }
 
         // ── Reflection helper ────────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+using Calluna;
 using Calluna.DI;
 using UnityEngine;
 
@@ -21,6 +22,8 @@ namespace Calluna.UI
     ///   <item><see cref="Pool{TItem,TData,PrefabInstantiationArguments}"/> — via <c>MonoPoolInstaller&lt;TItem,TData&gt;</c></item>
     ///   <item><see cref="ReadonlyObservableList{TData}"/> — data source</item>
     ///   <item><see cref="QuitDetector"/> — provided by the DI framework's AppContext</item>
+    ///   <item><c>ValueTweener&lt;float&gt;</c> id <see cref="VirtualScrollBase.ScrollTweenerId"/> —
+    ///         provided by the layout installer; requires <see cref="CoroutineHelper"/></item>
     /// </list>
     /// </summary>
     public abstract class VirtualScrollView<TItem, TData> : VirtualScrollBase<TItem>, Injectable, Initializable, Cleanable
@@ -34,10 +37,11 @@ namespace Calluna.UI
 
         void Injectable.Inject(Resolver resolver)
         {
-            _layout       = resolver.Resolve<IScrollLayout>();
-            _pool         = resolver.Resolve<Pool<TItem, TData, PrefabInstantiationArguments>>();
-            _items        = resolver.Resolve<ReadonlyObservableList<TData>>();
-            _quitDetector = resolver.Resolve<QuitDetector>();
+            _layout        = resolver.Resolve<IScrollLayout>();
+            _pool          = resolver.Resolve<Pool<TItem, TData, PrefabInstantiationArguments>>();
+            _items         = resolver.Resolve<ReadonlyObservableList<TData>>();
+            _quitDetector  = resolver.Resolve<QuitDetector>();
+            _scrollTweener = resolver.Resolve<ValueTweener<float>>(ScrollTweenerId);
         }
 
         void Initializable.Initialize()
@@ -65,6 +69,16 @@ namespace Calluna.UI
             _items.OnItemsSwapped -= OnItemsSwapped;
         }
 
+        /// <summary>
+        /// Scrolls so that the item at <paramref name="index"/> is visible.
+        /// Pass a positive <paramref name="duration"/> for an animated scroll; omit or pass 0 for
+        /// an instant snap. Animated scroll is driven by the <c>ValueTweener&lt;float&gt;</c> and
+        /// <see cref="CoroutineHelper"/> provided by the layout installer.
+        /// </summary>
+        public void ScrollToIndex(int index, ScrollAlignment alignment = ScrollAlignment.Start,
+            float duration = 0f, TweenType tweenType = TweenType.EaseInOutSine)
+            => base.ScrollToIndex(index, alignment, duration, tweenType);
+
         protected override TItem RequestItem(int index)
             => _pool.Request(_items[index], PrefabInstantiationArguments.CreateUIArgs(_contentRect));
 
@@ -73,14 +87,14 @@ namespace Calluna.UI
 
         // ── List event handlers ──────────────────────────────────────────────────
 
-        private void OnItemAdded(TData item, int index)
+        private void OnItemAdded(TData _, int index)
         {
             ShiftActiveItems(index, +1);
             ResizeContent();
             RefreshVisibleItems();
         }
 
-        private void OnItemRemoved(TData item, int index)
+        private void OnItemRemoved(TData _, int index)
         {
             ReturnActiveItemAt(index);
             ShiftActiveItems(index + 1, -1);
@@ -88,10 +102,10 @@ namespace Calluna.UI
             RefreshVisibleItems();
         }
 
-        private void OnItemReplaced(TData newItem, TData formerItem, int index)
+        private void OnItemReplaced(TData _, TData _2, int index)
             => ReplaceActiveItem(index);
 
-        private void OnItemsSwapped(TData item1, int index1, TData item2, int index2)
+        private void OnItemsSwapped(TData _, int index1, TData _2, int index2)
         {
             ReplaceActiveItem(index1);
             ReplaceActiveItem(index2);

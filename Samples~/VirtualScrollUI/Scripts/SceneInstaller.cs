@@ -3,21 +3,21 @@ using Calluna.DI;
 namespace Calluna.UI.Samples.VirtualScrollUI
 {
     /// <summary>
-    /// Concrete installer for the Virtual Scroll sample.
-    /// Inheriting <see cref="VirtualScrollGridInstaller"/> handles the <see cref="IScrollLayout"/> binding.
-    /// This subclass adds the data list so the grid has a source to react to.
+    /// Binds the shared data list for the Virtual Scroll sample.
+    /// Add this alongside <see cref="VirtualScrollGridInstaller"/> on the same GameObjectContext.
     /// </summary>
-    public class SceneInstaller : VirtualScrollGridInstaller
+    public class SceneInstaller : MonoInstaller
     {
         private readonly ObservableList<ItemData> _items = new();
 
         public override void InstallBindings(Binder binder)
         {
-            base.InstallBindings(binder);
-
             binder.Bind<ObservableList<ItemData>>()
-                  .And<ReadonlyObservableList<ItemData>>()
-                  .ToInstance(_items);
+                .And<ReadonlyObservableList<ItemData>>()
+                .ToInstance(_items);
+            binder.BindComponent<CoroutineHelper>()
+                .FromNewComponentOnNewGameObject("CoroutineHelper", transform)
+                .AsSingle();
         }
     }
 }

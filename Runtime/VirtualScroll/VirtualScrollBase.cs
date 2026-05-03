@@ -6,18 +6,29 @@ using UnityEngine.UI;
 namespace Calluna.UI
 {
     /// <summary>
+    /// Non-generic root for all virtualised scroll view types. Provides the
+    /// shared DI binding ID used to resolve the scroll <see cref="ValueTweener{TValue}"/>.
+    /// </summary>
+    public abstract class VirtualScrollBase : MonoBehaviour
+    {
+        /// <summary>DI ID under which <c>ValueTweener&lt;float&gt;</c> is registered.</summary>
+        public const string ScrollTweenerId = "virtualscroll-tweener";
+    }
+
+    /// <summary>
     /// Non-generic shared logic for virtualised scroll views.
     /// Handles scroll events, visible-range computation, item placement,
     /// and pool request/return dispatch. Layout-agnostic — works with any
     /// <see cref="IScrollLayout"/> implementation (grid, vertical list, horizontal list, etc.).
     /// </summary>
-    public abstract class VirtualScrollBase<TItem> : MonoBehaviour
+    public abstract class VirtualScrollBase<TItem> : VirtualScrollBase
         where TItem : Component
     {
         [SerializeField] private ScrollRect _scrollRect;
 
         protected IScrollLayout _layout;
         protected RectTransform _contentRect;
+        protected ValueTweener<float> _scrollTweener;
 
         private readonly Dictionary<int, TItem> _activeItems = new();
         private readonly List<int> _recycleBuffer   = new();
@@ -29,6 +40,7 @@ namespace Calluna.UI
         protected bool _isDirty;
         private bool _initialized;
         private Vector2 _lastViewportSize;
+        private RectTransform _viewport;
 
         // ── Overridable by concrete variants ────────────────────────────────────
 
@@ -50,6 +62,7 @@ namespace Calluna.UI
         protected void InitializeBase()
         {
             _contentRect = _scrollRect.content;
+            _viewport    = _scrollRect.viewport;
 
             // Content must use top-left anchor/pivot so anchoredPosition grows downward.
             _contentRect.anchorMin        = new Vector2(0f, 1f);
@@ -67,9 +80,11 @@ namespace Calluna.UI
         {
             // Guard must be cleared before ReturnAll so LateUpdate cannot re-activate items
             // while the pool is mid-teardown.
-            _initialized     = false;
+            _initialized      = false;
             _lastViewportSize = Vector2.zero;
+            _viewport         = null;
             _scrollRect.onValueChanged.RemoveListener(OnScrolled);
+            _scrollTweener?.Stop();
             ReturnAll();
         }
 
@@ -116,10 +131,7 @@ namespace Calluna.UI
                 if (key >= fromIndex) _recycleBuffer.Add(key);
 
             // Descending order for positive delta (insert) to avoid key collisions.
-            if (delta > 0)
-                _recycleBuffer.Sort(_descendingComparison);
-            else
-                _recycleBuffer.Sort();
+            _recycleBuffer.Sort(delta > 0 ? _descendingComparison : null);
 
             foreach (int key in _recycleBuffer)
             {
@@ -129,6 +141,72 @@ namespace Calluna.UI
                 _activeItems[newKey] = item;
                 ((RectTransform)item.transform).anchoredPosition = _layout.ComputeItemPosition(newKey);
             }
+        }
+
+        /// <summary>
+        /// Scrolls so that the item at <paramref name="index"/> is visible according to
+        /// <paramref name="alignment"/>. When <paramref name="duration"/> is greater than zero
+        /// the scroll is animated using the supplied <paramref name="tweenType"/>; otherwise it
+        /// snaps immediately. Requires <see cref="InitializeBase"/> to have been called first.
+        /// If <see cref="CoroutineHelper"/> was not resolved, animation degrades to instant snap.
+        /// <para>
+        /// Note: if called before the Canvas has laid out (e.g. directly after Initialize),
+        /// call <c>Canvas.ForceUpdateCanvases()</c> first to ensure viewport dimensions are correct.
+        /// </para>
+        /// </summary>
+        protected void ScrollToIndex(int index, ScrollAlignment alignment, float duration = 0f,
+            TweenType tweenType = TweenType.EaseInOutSine)
+        {
+            if (!_initialized || index < 0 || index >= ItemCount) return;
+
+            Vector2 itemPos     = _layout.ComputeItemPosition(index);
+            Vector2 itemSize    = _layout.ItemSize;
+            Vector2 contentSize = _layout.ComputeContentSize(ItemCount);
+            Vector2 vpSize      = _viewport.rect.size;
+
+            float maxScrollX = Mathf.Max(0f, contentSize.x - vpSize.x);
+            float maxScrollY = Mathf.Max(0f, contentSize.y - vpSize.y);
+
+            // anchoredPosition: x positive-right, y negative-down → negate y for pixel offset from top
+            float itemLeft = itemPos.x;
+            float itemTop  = -itemPos.y;
+
+            float rawX, rawY;
+            switch (alignment)
+            {
+                case ScrollAlignment.Center:
+                    rawX = itemLeft + itemSize.x * 0.5f - vpSize.x * 0.5f;
+                    rawY = itemTop  + itemSize.y * 0.5f - vpSize.y * 0.5f;
+                    break;
+                case ScrollAlignment.End:
+                    rawX = itemLeft + itemSize.x - vpSize.x;
+                    rawY = itemTop  + itemSize.y - vpSize.y;
+                    break;
+                default: // Start
+                    rawX = itemLeft;
+                    rawY = itemTop;
+                    break;
+            }
+
+            float normX = maxScrollX > 0f ? Mathf.Clamp01(rawX / maxScrollX)        : 0f;
+            float normY = maxScrollY > 0f ? 1f - Mathf.Clamp01(rawY / maxScrollY) : 0f;
+
+            if (duration <= 0f || _scrollTweener == null)
+            {
+                if (maxScrollX > 0f) _scrollRect.horizontalNormalizedPosition = normX;
+                if (maxScrollY > 0f) _scrollRect.verticalNormalizedPosition   = normY;
+                return;
+            }
+
+            float startX = _scrollRect.horizontalNormalizedPosition;
+            float startY = _scrollRect.verticalNormalizedPosition;
+            _scrollTweener.Perform(0f, 1f, duration, tweenType, t =>
+            {
+                if (maxScrollX > 0f)
+                    _scrollRect.horizontalNormalizedPosition = Mathf.LerpUnclamped(startX, normX, t);
+                if (maxScrollY > 0f)
+                    _scrollRect.verticalNormalizedPosition   = Mathf.LerpUnclamped(startY, normY, t);
+            });
         }
 
         // ── Unity messages ───────────────────────────────────────────────────────
@@ -144,7 +222,7 @@ namespace Calluna.UI
         {
             if (!_initialized) return;
 
-            Vector2 viewportSize = _scrollRect.viewport.rect.size;
+            Vector2 viewportSize = _viewport.rect.size;
             if (viewportSize != _lastViewportSize)
             {
                 _lastViewportSize = viewportSize;
@@ -224,7 +302,7 @@ namespace Calluna.UI
         /// </summary>
         protected virtual Rect GetViewportRect()
         {
-            _scrollRect.viewport.GetWorldCorners(_viewportCorners);
+            _viewport.GetWorldCorners(_viewportCorners);
             // corners: [0]=BL  [1]=TL  [2]=TR  [3]=BR
             Vector2 topLeft     = _contentRect.InverseTransformPoint(_viewportCorners[1]);
             Vector2 bottomRight = _contentRect.InverseTransformPoint(_viewportCorners[3]);
