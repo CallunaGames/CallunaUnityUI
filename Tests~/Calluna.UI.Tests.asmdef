@@ -6,7 +6,8 @@
         "UnityEngine.TestRunner",
         "Calluna.UI",
         "Calluna.Core",
-        "Calluna.DI"
+        "Calluna.DI",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
