@@ -131,7 +131,8 @@ namespace Calluna.UI
                 if (key >= fromIndex) _recycleBuffer.Add(key);
 
             // Descending order for positive delta (insert) to avoid key collisions.
-            _recycleBuffer.Sort(delta > 0 ? _descendingComparison : null);
+            if (delta > 0) _recycleBuffer.Sort(_descendingComparison);
+            else           _recycleBuffer.Sort();
 
             foreach (int key in _recycleBuffer)
             {
@@ -171,22 +172,14 @@ namespace Calluna.UI
             float itemLeft = itemPos.x;
             float itemTop  = -itemPos.y;
 
-            float rawX, rawY;
-            switch (alignment)
+            (float rawX, float rawY) = alignment switch
             {
-                case ScrollAlignment.Center:
-                    rawX = itemLeft + itemSize.x * 0.5f - vpSize.x * 0.5f;
-                    rawY = itemTop  + itemSize.y * 0.5f - vpSize.y * 0.5f;
-                    break;
-                case ScrollAlignment.End:
-                    rawX = itemLeft + itemSize.x - vpSize.x;
-                    rawY = itemTop  + itemSize.y - vpSize.y;
-                    break;
-                default: // Start
-                    rawX = itemLeft;
-                    rawY = itemTop;
-                    break;
-            }
+                ScrollAlignment.Center => (itemLeft + itemSize.x * 0.5f - vpSize.x * 0.5f,
+                                           itemTop  + itemSize.y * 0.5f - vpSize.y * 0.5f),
+                ScrollAlignment.End    => (itemLeft + itemSize.x - vpSize.x,
+                                           itemTop  + itemSize.y - vpSize.y),
+                _                      => (itemLeft, itemTop),
+            };
 
             float normX = maxScrollX > 0f ? Mathf.Clamp01(rawX / maxScrollX)        : 0f;
             float normY = maxScrollY > 0f ? 1f - Mathf.Clamp01(rawY / maxScrollY) : 0f;

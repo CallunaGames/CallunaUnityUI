@@ -10,7 +10,7 @@ namespace Calluna.UI
     {
         [SerializeField] private TMP_InputField _inputField;
         [SerializeField] private string _format = string.Empty;
-        [SerializeField] private bool _prohibitEmpty;
+        [SerializeField] private bool _isEmptyProhibited;
         [SerializeField] private TextInputUpdateMode _updateMode = TextInputUpdateMode.OnValueChanged;
 
         public event Action<string> ParsingFailed;
@@ -19,6 +19,11 @@ namespace Calluna.UI
         private TextInputVisualArgs _visualArgs;
         private Color _originalColor;
         private TValue _lastValidValue;
+
+        // Cached formatter resolved once in OnInitialize() to avoid boxing TValue on every
+        // value-change event. The naïve `value is IFormattable` pattern-match boxes value
+        // types (float, int) each time FormatValue() is called.
+        private Func<TValue, string> _formatter;
 
         protected override void OnInject(Resolver resolver)
         {
@@ -29,6 +34,12 @@ namespace Calluna.UI
 
         protected override void OnInitialize()
         {
+            // Must be set before base.OnInitialize() because base calls UpdateInput() → FormatValue().
+            if (typeof(IFormattable).IsAssignableFrom(typeof(TValue)))
+                _formatter = v => ((IFormattable)v).ToString(_format, _cultureInfo);
+            else
+                _formatter = v => v?.ToString();
+
             base.OnInitialize();
             if (_visualArgs != null)
                 _originalColor = _visualArgs.Target.color;
@@ -59,28 +70,28 @@ namespace Calluna.UI
 
         protected override void AddInputListener()
         {
-            _inputField.onValueChanged.AddListener(OnValueChangedHandler);
-            _inputField.onEndEdit.AddListener(OnEndEditHandler);
+            _inputField.onValueChanged.AddListener(OnInputValueChanged);
+            _inputField.onEndEdit.AddListener(OnInputEndEdit);
         }
 
         protected override void RemoveInputListener()
         {
-            _inputField.onValueChanged.RemoveListener(OnValueChangedHandler);
-            _inputField.onEndEdit.RemoveListener(OnEndEditHandler);
+            _inputField.onValueChanged.RemoveListener(OnInputValueChanged);
+            _inputField.onEndEdit.RemoveListener(OnInputEndEdit);
         }
 
-        private void OnValueChangedHandler(string input)
+        private void OnInputValueChanged(string input)
         {
             ApplyVisualFeedback(input);
             if (_updateMode == TextInputUpdateMode.OnValueChanged)
                 ParseAndSetValue(input);
         }
 
-        private void OnEndEditHandler(string input)
+        private void OnInputEndEdit(string input)
         {
             if (_inputField.wasCanceled) return;
 
-            if (_prohibitEmpty && string.IsNullOrWhiteSpace(input))
+            if (_isEmptyProhibited && string.IsNullOrWhiteSpace(input))
             {
                 string revertedText = FormatValue(_lastValidValue) ?? string.Empty;
                 ApplyDisplayValue(revertedText);
@@ -94,7 +105,7 @@ namespace Calluna.UI
 
         private void ApplyVisualFeedback(string input)
         {
-            if (_visualArgs == null || !_prohibitEmpty) return;
+            if (_visualArgs == null || !_isEmptyProhibited) return;
             _visualArgs.Target.color = string.IsNullOrWhiteSpace(input)
                 ? _visualArgs.InvalidColor
                 : _originalColor;
@@ -104,7 +115,7 @@ namespace Calluna.UI
 
         private void ParseAndSetValue(string input)
         {
-            if (_prohibitEmpty && string.IsNullOrWhiteSpace(input)) return;
+            if (_isEmptyProhibited && string.IsNullOrWhiteSpace(input)) return;
             if (TryParseInput(input, out TValue result))
                 SetValue(result);
             else
@@ -119,9 +130,7 @@ namespace Calluna.UI
 
         private string FormatValue(TValue value)
         {
-            if (value is IFormattable formattable)
-                return formattable.ToString(_format, _cultureInfo);
-            return value?.ToString();
+            return _formatter(value);
         }
     }
 }

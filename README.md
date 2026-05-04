@@ -103,7 +103,40 @@ BasicInput<TValue> : MonoBehaviour, Injectable, Initializable, Cleanable
 
 `BasicDropdown` additionally resolves a `ReadonlyObservableList<TMP_Dropdown.OptionData>` for the option list, and reacts live to list changes using `ObservableListChangeDetector<T>`.
 
-`TextInput` subclasses emit a `Debug.LogWarning` and fire the `ParsingFailed` event (`Action<string>`) when input cannot be parsed. Override `OnParseFailure(string)` for custom error handling beyond the event. Text inputs also optionally resolve a `CultureInfo` from DI for number formatting; when absent, `CultureInfo.InvariantCulture` is used.
+`TextInput` subclasses emit a `Debug.LogWarning` and fire the `ParsingFailed` event (`Action<string>`) when `TryParseInput` returns false. Override `OnParseFailure(string)` for custom error handling beyond the event. Text inputs also optionally resolve a `CultureInfo` from DI for number formatting; when absent, `CultureInfo.InvariantCulture` is used.
+
+**Empty-input prevention**
+
+The `_isEmptyProhibited` serialized field (Inspector checkbox) prevents empty or whitespace input from being written to the observable. When the field loses focus with an empty value, the display reverts to the last valid value. Visual feedback during typing is available by binding a `TextInputVisualArgs` instance in DI (see below).
+
+**Update mode**
+
+The `TextInputUpdateMode` enum controls when the observable is updated:
+
+| Value | Behaviour |
+|---|---|
+| `OnValueChanged` (default) | Observable is updated on every keystroke |
+| `OnSubmit` | Observable is updated only when the field loses focus (submit) |
+
+Set the mode via the `_updateMode` serialized field in the Inspector.
+
+**Visual feedback for invalid input**
+
+`TextInputVisualArgs` is a plain class that carries a target `Graphic` and an `InvalidColor`. When bound in DI, `TextInput` applies `InvalidColor` to the `Graphic` while the field is empty (and `_isEmptyProhibited` is enabled), and restores the original color when input becomes valid.
+
+Bind it using `TextInputVisualArgsInstaller` — a concrete `MonoInstaller` with two Inspector fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `Target` | `Graphic` | The graphic to recolor (auto-populated via `Reset()` to the first child `Graphic`) |
+| `Invalid Color` | `Color` | Color applied while input is empty/invalid (default: red) |
+
+```csharp
+// TextInputVisualArgs constructor — used internally by TextInputVisualArgsInstaller:
+new TextInputVisualArgs(target: myGraphic, invalidColor: Color.red)
+```
+
+Add `TextInputVisualArgsInstaller` to the same `GameObjectContext` as the input component and the visual args will be resolved automatically.
 
 #### Example: Int input field
 
@@ -327,7 +360,7 @@ VirtualScrollBase<TItem>                   — MonoBehaviour, shared scroll/pool
 | `Spacing` | `Vector2` | Gap between cells (horizontal, vertical) |
 | `Padding` | `Padding` | Outer padding (`Top`, `Bottom`, `Left`, `Right`) |
 
-Installer base class: `VirtualScrollGridInstaller`
+Installer: `VirtualScrollGridInstaller`
 
 **`VerticalListScrollLayout`** — single-column list scrolling vertically.
 
@@ -337,7 +370,7 @@ Installer base class: `VirtualScrollGridInstaller`
 | `Spacing` | `float` | Vertical gap between items |
 | `Padding` | `Padding` | Outer padding (`Top`, `Bottom`, `Left`, `Right`) |
 
-Installer base class: `VirtualScrollVerticalListInstaller`
+Installer: `VirtualScrollVerticalListInstaller`
 
 **`HorizontalListScrollLayout`** — single-row list scrolling horizontally.
 
@@ -347,15 +380,11 @@ Installer base class: `VirtualScrollVerticalListInstaller`
 | `Spacing` | `float` | Horizontal gap between items |
 | `Padding` | `Padding` | Outer padding (`Top`, `Bottom`, `Left`, `Right`) |
 
-Installer base class: `VirtualScrollHorizontalListInstaller`
+Installer: `VirtualScrollHorizontalListInstaller`
 
-Each installer base class is abstract — create a one-line concrete subclass to make it attachable in the Unity Editor:
+`VirtualScrollGridInstaller`, `VirtualScrollVerticalListInstaller`, and `VirtualScrollHorizontalListInstaller` are all concrete `MonoInstaller` subclasses — add them directly to a `GameObjectContext` in the Inspector. No further subclassing is required.
 
-```csharp
-public class MyGridInstaller : VirtualScrollGridInstaller { }
-public class MyVerticalListInstaller : VirtualScrollVerticalListInstaller { }
-public class MyHorizontalListInstaller : VirtualScrollHorizontalListInstaller { }
-```
+Each installer also automatically binds a `ValueTweener<float>` (under the DI id `VirtualScrollBase.ScrollTweenerId = "virtualscroll-tweener"`) that enables animated scrolling via `ScrollToIndex`. The tweener requires `CoroutineHelper` to be present in the context (provided by Calluna Core).
 
 #### Usage
 
@@ -400,7 +429,7 @@ public class ItemGrid : VirtualScrollView<ItemCell, ItemData> { }
 
 **Step 4 — Write the installer**
 
-Subclass the appropriate layout installer to get the `IScrollLayout` binding for free. Its serialized `_layoutSettings` field appears in the Inspector automatically. Call `base.InstallBindings(binder)` first, then add the data list binding:
+`VirtualScrollGridInstaller` is a concrete `MonoInstaller` you can use directly. When you need to add extra bindings (such as the data list), subclass it: the layout settings field appears in the Inspector automatically, and calling `base.InstallBindings(binder)` also installs the `ValueTweener<float>` required for animated scrolling.
 
 ```csharp
 public class ItemGridInstaller : VirtualScrollGridInstaller
@@ -439,6 +468,40 @@ The `ScrollRect`'s **Content** and **Viewport** fields must be wired as usual fo
 #### Exposing the readonly interface
 
 Any system that only reads the list should resolve `ReadonlyObservableList<ItemData>`. A system that populates the list resolves `ObservableList<ItemData>` and calls `.Add()` / `.Remove()` — the view reacts automatically.
+
+#### Scrolling to a specific item
+
+Call `ScrollToIndex` on the concrete `VirtualScrollView<TItem, TData>` subclass to bring an item into view:
+
+```csharp
+public void ScrollToIndex(int index, ScrollAlignment alignment = ScrollAlignment.Start,
+    float duration = 0f, TweenType tweenType = TweenType.EaseInOutSine)
+```
+
+| Parameter | Description |
+|---|---|
+| `index` | Zero-based index of the item to scroll to. Out-of-range values are ignored. |
+| `alignment` | Where the item aligns in the viewport (see `ScrollAlignment` below) |
+| `duration` | Animation length in seconds; `0` snaps instantly |
+| `tweenType` | Easing applied to the animated scroll (default: `EaseInOutSine`) |
+
+`ScrollAlignment` values:
+
+| Value | Behaviour |
+|---|---|
+| `Start` (default) | Item's leading edge aligns with the viewport's leading edge |
+| `Center` | Item is centred within the viewport |
+| `End` | Item's trailing edge aligns with the viewport's trailing edge |
+
+Animated scroll requires `ValueTweener<float>` bound under `VirtualScrollBase.ScrollTweenerId` (`"virtualscroll-tweener"`). The layout installers bind this automatically. If the tweener is absent, the scroll degrades to an instant snap. If `ScrollToIndex` is called immediately after `Initialize()` before the Canvas has laid out, call `Canvas.ForceUpdateCanvases()` first to ensure correct viewport dimensions.
+
+```csharp
+// Instant snap to item 10 at center of viewport
+itemGrid.ScrollToIndex(10, ScrollAlignment.Center);
+
+// Animated scroll to item 10 over 0.4 seconds
+itemGrid.ScrollToIndex(10, ScrollAlignment.Center, duration: 0.4f);
+```
 
 ---
 

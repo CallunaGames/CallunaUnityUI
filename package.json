@@ -41,12 +41,15 @@
   ],
   "keywords": [
     "virtual-scroll",
+    "scroll-to-index",
     "grid",
     "vertical-list",
     "horizontal-list",
     "rolling-number",
     "progress",
     "input",
+    "text-input",
+    "input-validation",
     "drag",
     "bounds-constrainer",
     "theming"

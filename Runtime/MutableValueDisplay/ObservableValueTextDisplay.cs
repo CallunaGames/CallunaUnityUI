@@ -14,6 +14,11 @@ namespace Calluna.UI
         private ReadonlyObservable<TValue> _observable;
         private CultureInfo _cultureInfo;
 
+        // Cached formatter resolved once in Initialize() to avoid boxing TValue on every
+        // value-change event. The naïve `value is IFormattable` pattern-match boxes value
+        // types (float, int, double, long) each time FormatDisplayText() is called.
+        private Func<TValue, string> _formatter;
+
         void Injectable.Inject(Resolver resolver)
         {
             _observable = resolver.Resolve<ReadonlyObservable<TValue>>();
@@ -27,6 +32,13 @@ namespace Calluna.UI
 
         void Initializable.Initialize()
         {
+            // The IFormattable check is done once here against the type, not the value,
+            // so no boxing occurs on the hot path inside FormatDisplayText().
+            if (typeof(IFormattable).IsAssignableFrom(typeof(TValue)))
+                _formatter = v => ((IFormattable)v).ToString(_format, _cultureInfo);
+            else
+                _formatter = v => v?.ToString() ?? string.Empty;
+
             _observable.OnChanged += UpdateText;
             UpdateText();
         }
@@ -38,15 +50,12 @@ namespace Calluna.UI
 
         protected virtual void UpdateText()
         {
-            _text.text = GetText();
+            _text.text = FormatDisplayText();
         }
 
-        protected virtual string GetText()
+        protected virtual string FormatDisplayText()
         {
-            TValue value = _observable.Value;
-            if (value is IFormattable formattable)
-                return formattable.ToString(_format, _cultureInfo);
-            return value != null ? value.ToString() : string.Empty;
+            return _formatter(_observable.Value);
         }
     }
 }

@@ -52,6 +52,15 @@ namespace Calluna.UI.Tests
             Assert.AreEqual(layout.ComputeContentSize(1).x, layout.ComputeContentSize(10).x, 0.001f);
         }
 
+        [Test]
+        public void VerticalListScrollLayout_ComputeContentSize_WithPadLeftAndPadRight_WidthIncludesBothPads()
+        {
+            // padLeft=15, padRight=25, itemW=200 → width = 15+200+25 = 240
+            var layout = Make(200, 50, padLeft: 15, padRight: 25);
+            Vector2 size = layout.ComputeContentSize(1);
+            Assert.AreEqual(240f, size.x, 0.001f);
+        }
+
         // ── ComputeItemPosition ──────────────────────────────────────────────────
 
         [Test]

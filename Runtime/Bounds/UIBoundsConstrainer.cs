@@ -19,9 +19,11 @@ namespace Calluna.UI
             if (!boundsNullable.HasValue)
                 return;
 
+            // Cache target.position to avoid two round-trips through the Unity native layer.
+            Vector3 pos = target.position;
             Vector2 size = target.rect.size * (Vector2)target.lossyScale;
-            Vector2 clamped = ClampPositionToBounds((Vector2)target.position, size, target.pivot, boundsNullable.Value);
-            target.position = new Vector3(clamped.x, clamped.y, target.position.z);
+            Vector2 clamped = ClampPositionToBounds((Vector2)pos, size, target.pivot, boundsNullable.Value);
+            target.position = new Vector3(clamped.x, clamped.y, pos.z);
         }
 
         public virtual Rect? GetBoundsRect()
