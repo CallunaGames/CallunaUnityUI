@@ -92,6 +92,41 @@ namespace Calluna.UI.Tests
                 "Adding an item after Clean must not request a new cell");
         }
 
+        [Test]
+        public void VirtualScrollView_OnItemReplaced_ActiveItem_RequestsReplacement()
+        {
+            _scroll.DoInitialize(); // items "a","b","c" → RequestCount=3
+            int requestsBefore = _scroll.RequestCount;
+
+            _items[1] = "B"; // fires OnItemReplaced → ReplaceActiveItem(1)
+
+            Assert.AreEqual(1, _scroll.ReturnCount,
+                "must return the replaced item");
+            Assert.AreEqual(requestsBefore + 1, _scroll.RequestCount,
+                "must request a replacement cell for the replaced index");
+        }
+
+        [Test]
+        public void VirtualScrollView_OnItemsSwapped_ActiveItems_BothGetReplaced()
+        {
+            _scroll.DoInitialize(); // items "a","b","c" → RequestCount=3
+            int requestsBefore = _scroll.RequestCount;
+
+            _items.Swap(0, 2); // fires OnItemsSwapped → ReplaceActiveItem(0) + ReplaceActiveItem(2)
+
+            Assert.AreEqual(2, _scroll.ReturnCount,
+                "must return both swapped items");
+            Assert.AreEqual(requestsBefore + 2, _scroll.RequestCount,
+                "must request replacements for both swapped indices");
+        }
+
+        [Test]
+        public void VirtualScrollView_ScrollToIndex_BeforeInitialize_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(() => _scroll.ScrollToIndex(0, ScrollAlignment.Start),
+                "ScrollToIndex before Initialize must be a silent no-op");
+        }
+
         // ── Test doubles ─────────────────────────────────────────────────────────
 
         private sealed class FakeScrollView : VirtualScrollView<RectTransform, string>

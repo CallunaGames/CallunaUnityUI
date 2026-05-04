@@ -11,7 +11,7 @@ namespace Calluna.UI
         public event Action<Vector2> OnDragEnd;
 
         private IUIBoundsConstrainer _boundsConstrainer;
-        private RectTransform _transform;
+        private RectTransform _rectTransform;
         private RectTransform _constrainedRect;
         private RectTransform.Axis? _moveAxis;
 
@@ -19,19 +19,19 @@ namespace Calluna.UI
         {
             Arguments args = resolver.Resolve<Arguments>();
             _boundsConstrainer = resolver.ResolveOptional<UIBoundsConstrainer>();
-            _transform = args.TransformToDrag;
+            _rectTransform = args.TransformToDrag;
             _constrainedRect = args.BoundTransform == null ? args.TransformToDrag : args.BoundTransform;
             _moveAxis = args.MoveAxis;
         }
 
         void IBeginDragHandler.OnBeginDrag(PointerEventData eventData)
         {
-            OnDragStart?.Invoke(_transform.position);
+            OnDragStart?.Invoke(_rectTransform.position);
         }
 
         void IEndDragHandler.OnEndDrag(PointerEventData eventData)
         {
-            OnDragEnd?.Invoke(_transform.position);
+            OnDragEnd?.Invoke(_rectTransform.position);
         }
 
         void IDragHandler.OnDrag(PointerEventData eventData)
@@ -41,7 +41,7 @@ namespace Calluna.UI
             Vector2 delta = new Vector2(
                 _moveAxis is null or RectTransform.Axis.Horizontal ? eventData.delta.x : 0,
                 _moveAxis is null or RectTransform.Axis.Vertical ? eventData.delta.y : 0);
-            _transform.position += (Vector3)LimitToBounds(delta);
+            _rectTransform.position += (Vector3)LimitToBounds(delta);
         }
 
         protected virtual Vector2 LimitToBounds(Vector2 delta)
@@ -53,10 +53,13 @@ namespace Calluna.UI
             if (!boundsNullable.HasValue)
                 return delta;
 
+            // Cache _constrainedRect.position to avoid two round-trips through the Unity
+            // native layer (one for prospectivePosition and one for the final subtraction).
+            Vector2 currentPosition = _constrainedRect.position;
             Vector2 size = _constrainedRect.rect.size * (Vector2)_constrainedRect.lossyScale;
-            Vector2 prospectivePosition = (Vector2)_constrainedRect.position + delta;
+            Vector2 prospectivePosition = currentPosition + delta;
             Vector2 clampedPosition = UIBoundsConstrainer.ClampPositionToBounds(prospectivePosition, size, _constrainedRect.pivot, boundsNullable.Value);
-            return clampedPosition - (Vector2)_constrainedRect.position;
+            return clampedPosition - currentPosition;
         }
 
         public readonly struct Arguments

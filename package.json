@@ -9,7 +9,7 @@
   "changelogUrl": "https://github.com/CallunaGames/CallunaUnityUI/compare/v1.7.3...v1.8.0",
   "licensesUrl": "",
   "dependencies": {
-    "com.calluna.core": "1.3.0",
+    "com.calluna.core": "1.5.0",
     "com.calluna.di": "1.4.0"
   },
   "samples": [
@@ -41,12 +41,15 @@
   ],
   "keywords": [
     "virtual-scroll",
+    "scroll-to-index",
     "grid",
     "vertical-list",
     "horizontal-list",
     "rolling-number",
     "progress",
     "input",
+    "text-input",
+    "input-validation",
     "drag",
     "bounds-constrainer",
     "theming"

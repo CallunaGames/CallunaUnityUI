@@ -54,7 +54,7 @@ namespace Calluna.UI.Tests
         [Test]
         public void TextInput_OnValueChanged_ProhibitEmpty_BlankInput_DoesNotWriteObservable()
         {
-            SetField(_input, "_prohibitEmpty", true);
+            SetField(_input, "_isEmptyProhibited", true);
             InitInput(null);
 
             string valueBefore = _observable.Value;
@@ -66,7 +66,7 @@ namespace Calluna.UI.Tests
         [Test]
         public void TextInput_OnValueChanged_ProhibitEmpty_WhitespaceInput_DoesNotWriteObservable()
         {
-            SetField(_input, "_prohibitEmpty", true);
+            SetField(_input, "_isEmptyProhibited", true);
             InitInput(null);
 
             string valueBefore = _observable.Value;
@@ -78,7 +78,7 @@ namespace Calluna.UI.Tests
         [Test]
         public void TextInput_OnValueChanged_ProhibitEmpty_NonBlankInput_WritesObservable()
         {
-            SetField(_input, "_prohibitEmpty", true);
+            SetField(_input, "_isEmptyProhibited", true);
             InitInput(null);
 
             _tmpField.onValueChanged.Invoke("world");
@@ -126,7 +126,7 @@ namespace Calluna.UI.Tests
         [Test]
         public void TextInput_OnEndEdit_ProhibitEmpty_BlankInput_DoesNotWriteObservable()
         {
-            SetField(_input, "_prohibitEmpty", true);
+            SetField(_input, "_isEmptyProhibited", true);
             SetField(_input, "_updateMode", TextInputUpdateMode.OnSubmit);
             InitInput(null);
 
@@ -139,7 +139,7 @@ namespace Calluna.UI.Tests
         [Test]
         public void TextInput_OnEndEdit_ProhibitEmpty_NonBlankInput_WritesObservable()
         {
-            SetField(_input, "_prohibitEmpty", true);
+            SetField(_input, "_isEmptyProhibited", true);
             SetField(_input, "_updateMode", TextInputUpdateMode.OnSubmit);
             InitInput(null);
 
@@ -153,7 +153,7 @@ namespace Calluna.UI.Tests
         [Test]
         public void TextInput_VisualArgs_NotBound_NoExceptionOnBlankInput()
         {
-            SetField(_input, "_prohibitEmpty", true);
+            SetField(_input, "_isEmptyProhibited", true);
             InitInput(null);
 
             Assert.DoesNotThrow(() => _tmpField.onValueChanged.Invoke(string.Empty));
@@ -168,7 +168,7 @@ namespace Calluna.UI.Tests
             graphic.color = originalColor;
             var args = new TextInputVisualArgs(graphic, Color.red);
 
-            SetField(_input, "_prohibitEmpty", true);
+            SetField(_input, "_isEmptyProhibited", true);
             InitInput(args);
 
             _tmpField.onValueChanged.Invoke(string.Empty);
@@ -186,13 +186,73 @@ namespace Calluna.UI.Tests
             graphic.color = Color.white;
             var args = new TextInputVisualArgs(graphic, Color.red);
 
-            SetField(_input, "_prohibitEmpty", true);
+            SetField(_input, "_isEmptyProhibited", true);
             InitInput(args);
 
             _tmpField.onValueChanged.Invoke(string.Empty);   // turns red
             _tmpField.onValueChanged.Invoke("text");          // restores
 
             Assert.AreEqual(Color.white, graphic.color);
+
+            Object.DestroyImmediate(graphicGO);
+        }
+
+        [Test]
+        public void TextInput_ParsingFailed_InvalidInput_EventFired()
+        {
+            var failGO  = new GameObject("FailingInput");
+            var tmpField = failGO.AddComponent<TMP_InputField>();
+            var failing  = failGO.AddComponent<FakeFailingStringInput>();
+            SetField(failing, "_inputField", tmpField);
+
+            bool eventFired = false;
+            failing.ParsingFailed += _ => eventFired = true;
+
+            failing.DoInject(new FakeResolver(_observable, null));
+            failing.DoInitialize();
+            tmpField.onValueChanged.Invoke("bad");
+
+            Assert.IsTrue(eventFired, "ParsingFailed must fire when TryParseInput returns false");
+
+            Object.DestroyImmediate(failGO);
+        }
+
+        [Test]
+        public void TextInput_OnClean_WithVisualArgs_RestoresOriginalColor()
+        {
+            var graphicGO = new GameObject("Graphic");
+            var graphic   = graphicGO.AddComponent<Image>();
+            graphic.color = Color.white;
+            var args      = new TextInputVisualArgs(graphic, Color.red);
+
+            SetField(_input, "_isEmptyProhibited", true);
+            InitInput(args);
+
+            _tmpField.onValueChanged.Invoke(string.Empty); // turns red
+            _input.DoClean();                               // must restore original color
+
+            Assert.AreEqual(Color.white, graphic.color);
+
+            Object.DestroyImmediate(graphicGO);
+        }
+
+        [Test]
+        public void TextInput_OnEndEdit_ProhibitEmpty_BlankInput_WithVisualArgs_RestoresColor()
+        {
+            var graphicGO = new GameObject("Graphic");
+            var graphic   = graphicGO.AddComponent<Image>();
+            graphic.color = Color.white;
+            var args      = new TextInputVisualArgs(graphic, Color.red);
+
+            SetField(_input, "_isEmptyProhibited", true);
+            SetField(_input, "_updateMode", TextInputUpdateMode.OnSubmit);
+            InitInput(args);
+
+            _tmpField.onValueChanged.Invoke(string.Empty); // turns red
+            _tmpField.onEndEdit.Invoke(string.Empty);       // blank + prohibit → reverts display and restores color
+
+            Assert.AreEqual(Color.white, graphic.color,
+                "OnEndEdit with blank prohibited input must restore the original graphic color");
 
             Object.DestroyImmediate(graphicGO);
         }
@@ -237,6 +297,20 @@ namespace Calluna.UI.Tests
 
             // TMP_InputField.SetTextWithoutNotify requires a full TMP mesh hierarchy that
             // doesn't exist in EditMode tests — stub it out at the seam.
+            protected override void ApplyDisplayValue(string text) { }
+        }
+
+        private class FakeFailingStringInput : TextInput<string>
+        {
+            public void DoInject(Resolver resolver) => OnInject(resolver);
+            public void DoInitialize() => OnInitialize();
+
+            protected override bool TryParseInput(string input, out string result)
+            {
+                result = default;
+                return false;
+            }
+
             protected override void ApplyDisplayValue(string text) { }
         }
 

@@ -52,6 +52,15 @@ namespace Calluna.UI.Tests
             Assert.AreEqual(layout.ComputeContentSize(1).y, layout.ComputeContentSize(10).y, 0.001f);
         }
 
+        [Test]
+        public void HorizontalListScrollLayout_ComputeContentSize_WithPadTopAndPadBottom_HeightIncludesBothPads()
+        {
+            // padTop=10, padBottom=20, itemH=200 → height = 10+200+20 = 230
+            var layout = Make(100, 200, padTop: 10, padBottom: 20);
+            Vector2 size = layout.ComputeContentSize(1);
+            Assert.AreEqual(230f, size.y, 0.001f);
+        }
+
         // ── ComputeItemPosition ──────────────────────────────────────────────────
 
         [Test]

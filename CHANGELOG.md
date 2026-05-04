@@ -1,3 +1,25 @@
+## [1.8.0] - 2026-05-03
+
+### Added
+- `TextInputUpdateMode` enum (`OnValueChanged` / `OnSubmit`) — controls when `TextInput<TValue>` writes the parsed value back to the `Observable`. Use `OnSubmit` to defer writes until the user confirms input.
+- `TextInputVisualArgs` class — DI-injectable configuration for `TextInput<TValue>` visual feedback, specifying the target `Graphic` and the color to apply when input is invalid.
+- `TextInputVisualArgsInstaller` — concrete `MonoInstaller` that binds `TextInputVisualArgs` into the DI context.
+- `TextInput<TValue>._isEmptyProhibited` serialized field — when `true`, blank or whitespace input is silently ignored in `OnValueChanged` mode, or the display is reverted to the last valid value in `OnSubmit` mode.
+- `TextInput<TValue>.ParsingFailed` event — fires when `TryParseInput` returns `false`, supplying the raw input string to subscribers.
+- `ScrollAlignment` enum (`Start`, `Center`, `End`) — specifies where a target item should be positioned within the viewport during a scroll-to operation.
+- `VirtualScrollView<TItem, TData>.ScrollToIndex(int, ScrollAlignment, float, TweenType)` — public method to scroll to a specific list item, with optional animated transition.
+- `VirtualScrollBase.ScrollTweenerId` constant (`"virtualscroll-tweener"`) — DI ID used to resolve the `ValueTweener<float>` that drives animated scroll transitions.
+
+### Fixed
+- `VirtualScrollBase.ShiftActiveItems` with a negative delta no longer throws `ArgumentNullException`. The `null` comparison delegate was previously passed to `List<T>.Sort(Comparison<T>)`; the method now uses the pre-existing static readonly comparator.
+- `VirtualScrollBase.ScrollToIndex` no longer displaces content along a clamped axis. `horizontalNormalizedPosition` and `verticalNormalizedPosition` are now only written when the corresponding axis has scrollable content (`maxScroll > 0`).
+
+### Changed
+- `ObservableValueTextDisplay<TValue>.GetText()` has been renamed to `FormatDisplayText()` (protected virtual). Subclasses that override this method must rename their override accordingly.
+- `TextInput<TValue>` now caches a `Func<TValue, string>` formatter during `OnInitialize()` to avoid boxing value types on every input event.
+
+---
+
 ## [1.7.3] - 2026-04-25
 
 ### Fixed

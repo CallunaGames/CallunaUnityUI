@@ -77,5 +77,14 @@ namespace Calluna.UI.Tests
             float resultShort = animator.Step(0f, 100f, elapsed: 0.5f, duration: 1f);
             Assert.AreEqual(resultShort, resultLong, 0.0001f);
         }
+
+        [Test]
+        public void RollingNumberAnimator_Step_ElapsedExceedsDuration_ReturnsOvershotValue()
+        {
+            var animator = MakeAnimator();
+            // elapsed=2f, duration=1f → t=2.0. With linear ease and interpolate: result = 0 + (100-0)*2 = 200.
+            float result = animator.Step(0f, 100f, elapsed: 2f, duration: 1f);
+            Assert.AreEqual(200f, result, 0.0001f);
+        }
     }
 }

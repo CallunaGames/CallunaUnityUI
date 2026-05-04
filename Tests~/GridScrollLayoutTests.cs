@@ -182,6 +182,35 @@ namespace Calluna.UI.Tests
             Assert.AreEqual(Vector2.zero, layout.ComputeContentSize(itemCount));
         }
 
+        // ── ComputeItemPosition: both spacings applied ───────────────────────────
+
+        [Test]
+        [Description("ComputeItemPosition with both spacingX and spacingY => position accounts for both steps?")]
+        public void GridScrollLayout_ComputeItemPosition_BothSpacings_CorrectPosition()
+        {
+            // 3 columns, cellW=100, cellH=50, spacingX=10, spacingY=15.
+            // Index 4 → col=1, row=1.
+            // x = 0 + 1*(100+10) = 110
+            // y = -(0 + 1*(50+15)) = -65
+            var layout = Make(3, 100, 50, spacingX: 10, spacingY: 15);
+            Vector2 pos = layout.ComputeItemPosition(4);
+            Assert.AreEqual(110f, pos.x, 0.001f);
+            Assert.AreEqual(-65f, pos.y, 0.001f);
+        }
+
+        // ── ComputeContentSize: partial last row ─────────────────────────────────
+
+        [Test]
+        [Description("ComputeContentSize with a partial last row => height based on ceiling of row count?")]
+        public void GridScrollLayout_ComputeContentSize_PartialLastRow_HeightBasedOnCeiledRows()
+        {
+            // 5 items, 3 columns → ceil(5/3)=2 rows.
+            // height = 2*50 + 1*10 = 110
+            var layout = Make(3, 100, 50, spacingY: 10);
+            Vector2 size = layout.ComputeContentSize(5);
+            Assert.AreEqual(110f, size.y, 0.001f);
+        }
+
         // ── GetVisibleIndexRange: middle window of a long list ───────────────────
 
         [Test]
