@@ -71,6 +71,10 @@ namespace Calluna.UI
             _contentRect.pivot            = new Vector2(0f, 1f);
             _contentRect.anchoredPosition = Vector2.zero;
 
+            // Stop inertia before subscribing so the ScrollRect cannot drive the content
+            // away from anchoredPosition zero during the two-frame deferred activation window.
+            _scrollRect.StopMovement();
+
             _initialized          = true;
             _deferFirstActivation = true;
             _scrollRect.onValueChanged.AddListener(OnScrolled);
@@ -88,6 +92,7 @@ namespace Calluna.UI
             _viewport             = null;
             _scrollRect.onValueChanged.RemoveListener(OnScrolled);
             _scrollTweener?.Stop();
+            _scrollRect.StopMovement();
             ReturnAll();
         }
 

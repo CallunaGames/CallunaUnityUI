@@ -1,3 +1,10 @@
+## [1.8.3] - 2026-05-14
+
+### Fixed
+- `VirtualScrollBase.InitializeBase()` now calls `ScrollRect.StopMovement()` before subscribing to `onValueChanged`. Without this, residual inertia from a previous scroll session could shift the content `RectTransform` along the horizontal or vertical axis during the two-frame deferred activation window, producing a displaced starting position on re-initialization. `CleanBase()` also calls `StopMovement()` as a symmetrical guard on teardown.
+
+---
+
 ## [1.8.2] - 2026-05-13
 
 ### Performance

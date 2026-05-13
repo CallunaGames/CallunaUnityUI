@@ -1,16 +1,16 @@
 {
   "name": "com.calluna.ui",
-  "version": "1.8.2",
+  "version": "1.8.3",
   "displayName": "Calluna Unity UI",
   "description": "UI basics for Calluna Games Unity projects",
   "unity": "6000.33",
   "unityRelease": "",
   "documentationUrl": "https://github.com/CallunaGames/CallunaUnityUI",
-  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityUI/compare/v1.8.1...v1.8.2",
+  "changelogUrl": "https://github.com/CallunaGames/CallunaUnityUI/compare/v1.8.2...v1.8.3",
   "licensesUrl": "",
   "dependencies": {
     "com.calluna.core": "1.6.0",
-    "com.calluna.di": "1.5.0"
+    "com.calluna.di": "1.5.1"
   },
   "samples": [
     {
