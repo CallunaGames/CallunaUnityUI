@@ -39,6 +39,7 @@ namespace Calluna.UI
 
         protected bool _isDirty;
         private bool _initialized;
+        private bool _deferFirstActivation;
         private Vector2 _lastViewportSize;
         private RectTransform _viewport;
 
@@ -70,9 +71,10 @@ namespace Calluna.UI
             _contentRect.pivot            = new Vector2(0f, 1f);
             _contentRect.anchoredPosition = Vector2.zero;
 
-            _initialized = true;
+            _initialized          = true;
+            _deferFirstActivation = true;
             _scrollRect.onValueChanged.AddListener(OnScrolled);
-            Rebuild();
+            ResizeContent();
         }
 
         /// <summary>Call from <c>Clean()</c>. Unsubscribes from scroll and returns all active items.</summary>
@@ -80,9 +82,10 @@ namespace Calluna.UI
         {
             // Guard must be cleared before ReturnAll so LateUpdate cannot re-activate items
             // while the pool is mid-teardown.
-            _initialized      = false;
-            _lastViewportSize = Vector2.zero;
-            _viewport         = null;
+            _initialized          = false;
+            _deferFirstActivation = false;
+            _lastViewportSize     = Vector2.zero;
+            _viewport             = null;
             _scrollRect.onValueChanged.RemoveListener(OnScrolled);
             _scrollTweener?.Stop();
             ReturnAll();
@@ -214,6 +217,12 @@ namespace Calluna.UI
         protected virtual void LateUpdate()
         {
             if (!_initialized) return;
+
+            if (_deferFirstActivation)
+            {
+                _deferFirstActivation = false;
+                return;
+            }
 
             Vector2 viewportSize = _viewport.rect.size;
             if (viewportSize != _lastViewportSize)

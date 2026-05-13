@@ -1,3 +1,10 @@
+## [1.8.2] - 2026-05-13
+
+### Performance
+- `VirtualScrollBase.InitializeBase()` no longer calls `Rebuild()` synchronously on the first frame. A deferred activation flag causes the first `LateUpdate` after initialization to skip item activation; the second `LateUpdate` detects the viewport-size change and activates visible items normally. This spreads the pool-take and DI-init cost across frames rather than concentrating it in the initialization frame. `CleanBase()` resets the flag so re-initialization after cleaning behaves identically.
+
+---
+
 ## [1.8.1] - 2026-05-13
 
 ### Performance

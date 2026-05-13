@@ -23,6 +23,11 @@ namespace Calluna.UI.Tests
     /// LateUpdate reads _scrollRect.viewport.rect.size directly. A point-anchored
     /// RectTransform (anchorMin == anchorMax) returns sizeDelta as rect.size regardless
     /// of parent, so no Canvas is needed.
+    ///
+    /// Activation is deferred by one frame: InitializeBase() does not call Rebuild().
+    /// The first LateUpdate consumes the defer flag without activating items.
+    /// The second LateUpdate sees the viewport-size change and activates visible items.
+    /// Use DoSettle() (two LateUpdate calls) to reach the fully active state.
     /// </summary>
     public class VirtualScrollBaseTests
     {
@@ -59,13 +64,81 @@ namespace Calluna.UI.Tests
             Object.DestroyImmediate(_root);
         }
 
-        // ── Lifecycle guard tests (bugs fixed) ───────────────────────────────────
+        // ── Deferred first activation ────────────────────────────────────────────
+
+        [Test]
+        public void VirtualScrollBase_InitializeBase_DoesNotActivateItemsBeforeFirstLateUpdate()
+        {
+            _scroll.SetItemCount(3);
+
+            _scroll.DoInitialize();
+
+            Assert.AreEqual(0, _scroll.RequestCount,
+                "InitializeBase must not activate items — activation is deferred to LateUpdate");
+        }
+
+        [Test]
+        public void VirtualScrollBase_InitializeBase_SizesContentRectImmediately()
+        {
+            // VerticalListScrollLayout: ItemSize=(300,40), Spacing=0.
+            // ComputeContentSize(3) = (300, 120).
+            _scroll.SetItemCount(3);
+
+            _scroll.DoInitialize();
+
+            Assert.AreEqual(new Vector2(300f, 120f), _scrollRect.content.sizeDelta,
+                "Content rect must be sized by ResizeContent even before the first LateUpdate");
+        }
+
+        [Test]
+        public void VirtualScrollBase_FirstLateUpdateAfterInitialize_ConsumesDefer_DoesNotActivateItems()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+
+            _scroll.DoLateUpdate(); // consumes _deferFirstActivation flag only
+
+            Assert.AreEqual(0, _scroll.RequestCount,
+                "First LateUpdate after Initialize must only consume the defer flag, not activate items");
+        }
+
+        [Test]
+        public void VirtualScrollBase_SecondLateUpdateAfterInitialize_ActivatesVisibleItems()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+            _scroll.DoLateUpdate(); // consume defer
+
+            _scroll.DoLateUpdate(); // viewport-size change → RefreshVisibleItems
+
+            Assert.AreEqual(3, _scroll.RequestCount,
+                "Second LateUpdate after Initialize must activate all visible items");
+        }
+
+        [Test]
+        public void VirtualScrollBase_CleanAndReinitialize_DefersActivationAgain()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+            _scroll.DoSettle();  // fully active
+            _scroll.DoClean();
+            _scroll.DoInitialize(); // re-initialize after clean
+
+            _scroll.DoLateUpdate(); // must consume defer, not activate
+
+            // ReturnCount from DoClean = 3. RequestCount from first settle = 3.
+            // After re-init + one LateUpdate, no new requests should have fired.
+            Assert.AreEqual(3, _scroll.RequestCount,
+                "First LateUpdate after re-initialize must defer activation, not request new items");
+        }
+
+        // ── Lifecycle guard tests ────────────────────────────────────────────────
 
         [Test]
         public void VirtualScrollBase_LateUpdateAfterClean_DoesNotCallRefreshVisibleItems()
         {
             _scroll.DoInitialize();
-            _scroll.DoLateUpdate();  // consume initial size-cache miss; VRC advances
+            _scroll.DoSettle(); // fully settled — VRC advanced
             _scroll.DoClean();
             int countBefore = _scroll.ViewportRectCallCount;
 
@@ -79,9 +152,10 @@ namespace Calluna.UI.Tests
         public void VirtualScrollBase_CleanResetsViewportSizeCache_ReinitializeTriggersSizeChangeRefresh()
         {
             _scroll.DoInitialize();
-            _scroll.DoLateUpdate();  // viewport size (300,200) is now in _lastViewportSize
-            _scroll.DoClean();       // fix: resets _lastViewportSize to zero
-            _scroll.DoInitialize();  // Rebuild runs; _lastViewportSize is still zero
+            _scroll.DoSettle();  // _lastViewportSize is now (300,200)
+            _scroll.DoClean();   // resets _lastViewportSize to zero
+            _scroll.DoInitialize();
+            _scroll.DoLateUpdate(); // consumes defer flag
             int countBefore = _scroll.ViewportRectCallCount;
 
             _scroll.DoLateUpdate(); // (300,200) != (0,0) → size change → RefreshVisibleItems
@@ -135,7 +209,8 @@ namespace Calluna.UI.Tests
         public void VirtualScrollBase_CleanBase_ReturnsAllActiveItems()
         {
             _scroll.SetItemCount(3);
-            _scroll.DoInitialize(); // activates items 0, 1, 2
+            _scroll.DoInitialize();
+            _scroll.DoSettle(); // activates items 0, 1, 2
 
             _scroll.DoClean();
 
@@ -148,7 +223,7 @@ namespace Calluna.UI.Tests
         public void VirtualScrollBase_SetDirty_TriggersRebuildOnNextLateUpdate()
         {
             _scroll.DoInitialize();
-            _scroll.DoLateUpdate(); // consume initial size-cache miss
+            _scroll.DoSettle(); // fully settled — viewport-size change already consumed
             int countBefore = _scroll.ViewportRectCallCount;
 
             _scroll.DoSetDirty();
@@ -162,7 +237,7 @@ namespace Calluna.UI.Tests
         public void VirtualScrollBase_SetDirty_FlagClearedAfterRebuild_SecondLateUpdateDoesNotRebuild()
         {
             _scroll.DoInitialize();
-            _scroll.DoLateUpdate();
+            _scroll.DoSettle();
             _scroll.DoSetDirty();
             _scroll.DoLateUpdate(); // rebuild; dirty flag cleared
             int countAfterRebuild = _scroll.ViewportRectCallCount;
@@ -179,7 +254,8 @@ namespace Calluna.UI.Tests
         public void VirtualScrollBase_RefreshVisibleItems_ItemsOutsideNewViewport_AreReturned()
         {
             _scroll.SetItemCount(3);
-            _scroll.DoInitialize(); // items 0, 1, 2 all visible in the default (300,200) viewport
+            _scroll.DoInitialize();
+            _scroll.DoSettle(); // items 0, 1, 2 all visible in the default (300,200) viewport
 
             // Shrink to only show item 0 (yMin=-39 gives last=floor(39/40)=0)
             _scroll.SetViewport(new Rect(0, -39, 300, 39));
@@ -194,12 +270,13 @@ namespace Calluna.UI.Tests
         {
             _scroll.SetItemCount(3);
             _scroll.DoInitialize();
-            int requestsAfterInit = _scroll.RequestCount;
+            _scroll.DoSettle();
+            int requestsAfterSettle = _scroll.RequestCount;
 
             // Same viewport — all items still visible; nothing should be re-requested.
             _scrollRect.onValueChanged.Invoke(Vector2.zero);
 
-            Assert.AreEqual(requestsAfterInit, _scroll.RequestCount,
+            Assert.AreEqual(requestsAfterSettle, _scroll.RequestCount,
                 "RequestItem must not be called for indices already in the active set");
         }
 
@@ -210,6 +287,7 @@ namespace Calluna.UI.Tests
         {
             _scroll.SetItemCount(3);
             _scroll.DoInitialize();
+            _scroll.DoSettle();
 
             _scroll.DoReturnActiveItemAt(1);
 
@@ -221,6 +299,7 @@ namespace Calluna.UI.Tests
         {
             _scroll.SetItemCount(3);
             _scroll.DoInitialize();
+            _scroll.DoSettle();
             _scroll.DoReturnActiveItemAt(1);
 
             // Second call on the same index must be a no-op — item is already gone.
@@ -245,7 +324,8 @@ namespace Calluna.UI.Tests
         public void VirtualScrollBase_ReplaceActiveItem_ActiveIndex_ReturnsThenRequestsForSameIndex()
         {
             _scroll.SetItemCount(3);
-            _scroll.DoInitialize(); // RequestCount=3, ReturnCount=0
+            _scroll.DoInitialize();
+            _scroll.DoSettle(); // RequestCount=3, ReturnCount=0
 
             _scroll.DoReplaceActiveItem(1);
 
@@ -269,7 +349,8 @@ namespace Calluna.UI.Tests
         public void VirtualScrollBase_ShiftActiveItems_PositiveDelta_UpdatesPositionsOfShiftedItems()
         {
             _scroll.SetItemCount(3);
-            _scroll.DoInitialize(); // items 0,1,2 at positions (0,0),(0,-40),(0,-80)
+            _scroll.DoInitialize();
+            _scroll.DoSettle(); // items 0,1,2 at positions (0,0),(0,-40),(0,-80)
 
             _scroll.DoShiftActiveItems(1, +1); // keys 1 and 2 → re-keyed to 2 and 3
 
@@ -284,6 +365,7 @@ namespace Calluna.UI.Tests
         {
             _scroll.SetItemCount(3);
             _scroll.DoInitialize();
+            _scroll.DoSettle();
 
             _scroll.DoShiftActiveItems(1, +1);
 
@@ -296,6 +378,7 @@ namespace Calluna.UI.Tests
         {
             _scroll.SetItemCount(3);
             _scroll.DoInitialize();
+            _scroll.DoSettle();
             // Mirror the real usage: the removed item is returned before the shift.
             _scroll.DoReturnActiveItemAt(1);
 
@@ -488,7 +571,7 @@ namespace Calluna.UI.Tests
             // After SetItemCount(7) + DoSetDirty + DoLateUpdate: contentHeight = 280.
             _scroll.SetItemCount(3);
             _scroll.DoInitialize();
-            _scroll.DoLateUpdate(); // consume initial size-cache miss
+            _scroll.DoSettle(); // fully settled
 
             _scroll.SetItemCount(7);
             _scroll.DoSetDirty();
@@ -519,7 +602,8 @@ namespace Calluna.UI.Tests
         public void VirtualScrollBase_ShiftActiveItems_GapInActiveSet_SkipsMissingIndices()
         {
             _scroll.SetItemCount(3);
-            _scroll.DoInitialize(); // items 0, 1, 2 active
+            _scroll.DoInitialize();
+            _scroll.DoSettle(); // items 0, 1, 2 active
             _scroll.DoReturnActiveItemAt(1); // gap at index 1; active set is {0, 2}
 
             // Shift fromIndex=0, delta=+1: keys 0→1 and 2→3.
@@ -590,6 +674,14 @@ namespace Calluna.UI.Tests
             {
                 _layout = layout;
                 InitializeBase();
+            }
+
+            // Consumes the one-frame defer and the subsequent viewport-size LateUpdate,
+            // leaving the scroll in the fully active steady state.
+            public void DoSettle()
+            {
+                DoLateUpdate(); // clears _deferFirstActivation
+                DoLateUpdate(); // viewport-size change → RefreshVisibleItems
             }
 
             public void DoResizeContent() => ResizeContent();
