@@ -9,11 +9,14 @@ namespace Calluna.UI
     /// DI argument to each cell when it is (re-)activated. The pool injects and initialises the
     /// cell so it can read its data via <c>resolver.Resolve&lt;TData&gt;()</c>.
     ///
-    /// Reacts to individual <see cref="ReadonlyObservableList{TData}"/> events:
+    /// Reacts to <see cref="ReadonlyObservableList{TData}"/> events:
     /// <list type="bullet">
     ///   <item>Replace/swap — only the affected visible cells are refreshed; no rebuild.</item>
     ///   <item>Insert/remove — active cells above the mutation point are shifted and repositioned;
     ///         <see cref="VirtualScrollBase{TItem}.RefreshVisibleItems"/> reconciles the visible range.</item>
+    ///   <item><see cref="ReadonlyObservableList{TData}.OnContentsReplaced"/> (bulk replace via
+    ///         <c>OverrideWith</c>) — triggers a single <see cref="VirtualScrollBase{TItem}.Rebuild"/>
+    ///         instead of one refresh per changed element.</item>
     /// </list>
     ///
     /// DI bindings required:
@@ -46,11 +49,12 @@ namespace Calluna.UI
 
         void Initializable.Initialize()
         {
-            _quitDetector.OnQuit  += UnsubscribeItems;
-            _items.OnItemAdded    += OnItemAdded;
-            _items.OnItemRemoved  += OnItemRemoved;
-            _items.OnItemReplaced += OnItemReplaced;
-            _items.OnItemsSwapped += OnItemsSwapped;
+            _quitDetector.OnQuit      += UnsubscribeItems;
+            _items.OnItemAdded        += OnItemAdded;
+            _items.OnItemRemoved      += OnItemRemoved;
+            _items.OnItemReplaced     += OnItemReplaced;
+            _items.OnItemsSwapped     += OnItemsSwapped;
+            _items.OnContentsReplaced += Rebuild;
             InitializeBase();
         }
 
@@ -63,10 +67,11 @@ namespace Calluna.UI
 
         private void UnsubscribeItems()
         {
-            _items.OnItemAdded    -= OnItemAdded;
-            _items.OnItemRemoved  -= OnItemRemoved;
-            _items.OnItemReplaced -= OnItemReplaced;
-            _items.OnItemsSwapped -= OnItemsSwapped;
+            _items.OnItemAdded        -= OnItemAdded;
+            _items.OnItemRemoved      -= OnItemRemoved;
+            _items.OnItemReplaced     -= OnItemReplaced;
+            _items.OnItemsSwapped     -= OnItemsSwapped;
+            _items.OnContentsReplaced -= Rebuild;
         }
 
         /// <summary>

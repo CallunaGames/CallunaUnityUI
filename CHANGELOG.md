@@ -1,3 +1,10 @@
+## [1.8.1] - 2026-05-13
+
+### Performance
+- `VirtualScrollView` now subscribes to `OnContentsReplaced` on its data list and calls `Rebuild` once instead of triggering a full refresh cycle per element when the list is updated via `OverrideWith`. This eliminates excessive `RefreshVisibleItems`, `ReturnActiveItemAt`, `ShiftActiveItems`, and `ResizeContent` calls during bulk data updates such as inventory container refreshes.
+
+---
+
 ## [1.8.0] - 2026-05-03
 
 ### Added
