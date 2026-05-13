@@ -95,7 +95,8 @@ namespace Calluna.UI.Tests
         [Test]
         public void VirtualScrollView_OnItemReplaced_ActiveItem_RequestsReplacement()
         {
-            _scroll.DoInitialize(); // items "a","b","c" → RequestCount=3
+            _scroll.DoInitialize();
+            _scroll.DoSettle(); // settle deferred activation so items a,b,c are active
             int requestsBefore = _scroll.RequestCount;
 
             _items[1] = "B"; // fires OnItemReplaced → ReplaceActiveItem(1)
@@ -109,7 +110,8 @@ namespace Calluna.UI.Tests
         [Test]
         public void VirtualScrollView_OnItemsSwapped_ActiveItems_BothGetReplaced()
         {
-            _scroll.DoInitialize(); // items "a","b","c" → RequestCount=3
+            _scroll.DoInitialize();
+            _scroll.DoSettle(); // settle deferred activation so items a,b,c are active
             int requestsBefore = _scroll.RequestCount;
 
             _items.Swap(0, 2); // fires OnItemsSwapped → ReplaceActiveItem(0) + ReplaceActiveItem(2)
@@ -159,6 +161,11 @@ namespace Calluna.UI.Tests
                 SetField(this, "_pool", _pool);
                 ((Initializable)this).Initialize();
             }
+
+            public void DoLateUpdate() => LateUpdate();
+
+            // Two LateUpdate calls: first clears the defer flag, second activates visible items.
+            public void DoSettle() { DoLateUpdate(); DoLateUpdate(); }
 
             public void DoClean() => ((Cleanable)this).Clean();
         }
