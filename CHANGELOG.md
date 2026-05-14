@@ -1,7 +1,14 @@
+## [1.8.4] - 2026-05-14
+
+### Fixed
+- `VirtualScrollBase.InitializeBase()` now resets `ScrollRect.normalizedPosition` to `(0, 1)` before subscribing to `onValueChanged`. This clears the ScrollRect's internal scroll-position tracking so its `LateUpdate` does not restore a previous session's horizontal offset via elastic or clamp correction during the two-frame deferred activation window. `(0, 1)` maps to left edge, top — matching `anchoredPosition = Vector2.zero` for a top-left-anchored content rect. The call is a no-op before canvas layout (bounds are zero-sized), and correctly resets on subsequent opens.
+
+---
+
 ## [1.8.3] - 2026-05-14
 
 ### Fixed
-- `VirtualScrollBase.InitializeBase()` now calls `ScrollRect.StopMovement()` before subscribing to `onValueChanged`. Without this, residual inertia from a previous scroll session could shift the content `RectTransform` along the horizontal or vertical axis during the two-frame deferred activation window, producing a displaced starting position on re-initialization. `CleanBase()` also calls `StopMovement()` as a symmetrical guard on teardown.
+- `VirtualScrollBase.InitializeBase()` now calls `ScrollRect.StopMovement()` before subscribing to `onValueChanged` to prevent inertia-driven content drift during the two-frame deferred activation window. `CleanBase()` also calls `StopMovement()` as a symmetrical guard on teardown.
 
 ---
 
