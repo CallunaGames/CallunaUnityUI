@@ -71,9 +71,15 @@ namespace Calluna.UI
             _contentRect.pivot            = new Vector2(0f, 1f);
             _contentRect.anchoredPosition = Vector2.zero;
 
-            // Stop inertia before subscribing so the ScrollRect cannot drive the content
-            // away from anchoredPosition zero during the two-frame deferred activation window.
+            // Stop inertia and reset the ScrollRect's internal scroll position before
+            // subscribing. StopMovement() clears velocity (inertia). normalizedPosition (0,1)
+            // resets the ScrollRect's horizontal tracking so its LateUpdate does not restore a
+            // previous session's X offset via elastic/clamp correction.
+            // (0,1) = left edge, top — matches anchoredPosition zero for a top-left-anchored
+            // content rect. Safe before canvas layout: SetNormalizedPosition is a no-op when
+            // content/viewport bounds are zero-sized.
             _scrollRect.StopMovement();
+            _scrollRect.normalizedPosition = new Vector2(0f, 1f);
 
             _initialized          = true;
             _deferFirstActivation = true;
