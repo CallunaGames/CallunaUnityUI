@@ -43,6 +43,11 @@ namespace Calluna.UI
         private Vector2 _lastViewportSize;
         private RectTransform _viewport;
 
+        private int _pendingScrollIndex = -1;
+        private ScrollAlignment _pendingScrollAlignment;
+        private float _pendingScrollDuration;
+        private TweenType _pendingScrollTweenType;
+
         // ── Overridable by concrete variants ────────────────────────────────────
 
         protected abstract int ItemCount { get; }
@@ -95,6 +100,7 @@ namespace Calluna.UI
             _initialized          = false;
             _deferFirstActivation = false;
             _lastViewportSize     = Vector2.zero;
+            _pendingScrollIndex   = -1;
             _viewport             = null;
             _scrollRect.onValueChanged.RemoveListener(OnScrolled);
             _scrollTweener?.Stop();
@@ -165,14 +171,29 @@ namespace Calluna.UI
         /// snaps immediately. Requires <see cref="InitializeBase"/> to have been called first.
         /// If <see cref="CoroutineHelper"/> was not resolved, animation degrades to instant snap.
         /// <para>
-        /// Note: if called before the Canvas has laid out (e.g. directly after Initialize),
-        /// call <c>Canvas.ForceUpdateCanvases()</c> first to ensure viewport dimensions are correct.
+        /// Safe to call immediately after <c>Initialize()</c>, even before the data source has
+        /// produced its first item set. When <c>ItemCount</c> is zero the request is stored and
+        /// applied automatically on the first <c>LateUpdate</c> after items are available. If
+        /// the index is no longer valid at that point (item filtered out or list shrank) the
+        /// request is silently dropped.
         /// </para>
         /// </summary>
         protected void ScrollToIndex(int index, ScrollAlignment alignment, float duration = 0f,
             TweenType tweenType = TweenType.EaseInOutSine)
         {
-            if (!_initialized || index < 0 || index >= ItemCount) return;
+            if (!_initialized || index < 0) return;
+
+            // ItemCount may be zero before the container has finished its first rebuild (e.g. when
+            // ScheduleActiveSlotsUpdate defers the initial ActiveSlots build to end-of-frame). Store
+            // the request and apply it in LateUpdate once items exist and the canvas is laid out.
+            if (index >= ItemCount)
+            {
+                _pendingScrollIndex     = index;
+                _pendingScrollAlignment = alignment;
+                _pendingScrollDuration  = duration;
+                _pendingScrollTweenType = tweenType;
+                return;
+            }
 
             Vector2 itemPos     = _layout.ComputeItemPosition(index);
             Vector2 itemSize    = _layout.ItemSize;
@@ -242,9 +263,20 @@ namespace Calluna.UI
                 RefreshVisibleItems();
             }
 
-            if (!_isDirty) return;
-            _isDirty = false;
-            Rebuild();
+            if (_isDirty)
+            {
+                _isDirty = false;
+                Rebuild();
+            }
+
+            if (_pendingScrollIndex >= 0)
+            {
+                int index = _pendingScrollIndex;
+                _pendingScrollIndex = -1;
+                // Index may have become invalid (item filtered out or list shrank); drop silently.
+                if (index < ItemCount)
+                    ScrollToIndex(index, _pendingScrollAlignment, _pendingScrollDuration, _pendingScrollTweenType);
+            }
         }
 
         // ── Core logic ───────────────────────────────────────────────────────────

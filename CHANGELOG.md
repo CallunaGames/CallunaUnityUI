@@ -1,3 +1,10 @@
+## [1.8.5] - 2026-05-14
+
+### Fixed
+- `VirtualScrollBase.ScrollToIndex` now works correctly when called immediately after `Initialize()`, before the data source has produced its first item set. Previously, `ItemCount = 0` caused the guard to return silently and the call was lost. The request is now stored and applied automatically on the first `LateUpdate` after items are available. If the index is no longer valid at that point (item filtered out or list shrank) the request is silently dropped. `CleanBase()` discards any stored request so stale indices cannot fire on re-open.
+
+---
+
 ## [1.8.4] - 2026-05-14
 
 ### Fixed
