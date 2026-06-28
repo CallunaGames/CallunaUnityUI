@@ -11,6 +11,7 @@ namespace Calluna.UI
         [SerializeField] private TMP_InputField _inputField;
         [SerializeField] private string _format = string.Empty;
         [SerializeField] private bool _isEmptyProhibited;
+        [SerializeField] private bool _cropWhitespace;
         [SerializeField] private TextInputUpdateMode _updateMode = TextInputUpdateMode.OnValueChanged;
 
         public event Action<string> ParsingFailed;
@@ -115,6 +116,8 @@ namespace Calluna.UI
 
         private void ParseAndSetValue(string input)
         {
+            if (_cropWhitespace)
+                input = input.Trim();
             if (_isEmptyProhibited && string.IsNullOrWhiteSpace(input)) return;
             if (TryParseInput(input, out TValue result))
                 SetValue(result);

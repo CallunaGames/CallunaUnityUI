@@ -1,3 +1,10 @@
+## [1.9.0] - 2026-06-28
+
+### Added
+- `TextInput<TValue>._cropWhitespace` serialized field — when `true`, leading and trailing whitespace is stripped from the raw input string before parsing and before the empty-prohibited guard. The display field updates to the trimmed value automatically via the observable feedback loop. Works in both `OnValueChanged` and `OnSubmit` update modes.
+
+---
+
 ## [1.8.5] - 2026-05-14
 
 ### Fixed
