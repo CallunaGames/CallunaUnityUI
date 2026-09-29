@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Calluna.DI;
 using TMPro;
@@ -10,7 +11,7 @@ namespace Calluna.UI
         [SerializeField] private TMP_Dropdown _dropdown;
 
         private ReadonlyObservableList<TMP_Dropdown.OptionData> _options;
-        private ObservableListChangeDetector<TMP_Dropdown.OptionData> _optionChangeDetector;
+        private IDisposable _optionsSubscription;
         private bool _areOptionsDirty;
         private TMP_Dropdown.OptionData _selectedOption;
         private List<TMP_Dropdown.OptionData> _optionsBuffer;
@@ -24,7 +25,6 @@ namespace Calluna.UI
         {
             base.OnInject(resolver);
             _options = resolver.Resolve<ReadonlyObservableList<TMP_Dropdown.OptionData>>();
-            _optionChangeDetector = new ObservableListChangeDetector<TMP_Dropdown.OptionData>(_options);
             _optionsBuffer = new List<TMP_Dropdown.OptionData>();
         }
 
@@ -38,15 +38,15 @@ namespace Calluna.UI
         protected override void OnInitialize()
         {
             base.OnInitialize();
-            _optionChangeDetector.OnChanged += SetOptionsDirty;
+            _optionsSubscription = _options.SubscribeAny(SetOptionsDirty);
             UpdateOptions();
         }
 
         protected override void OnClean()
         {
             base.OnClean();
-            _optionChangeDetector.OnChanged -= SetOptionsDirty;
-            _optionChangeDetector.Dispose();
+            _optionsSubscription?.Dispose();
+            _optionsSubscription = null;
         }
 
         protected override void UpdateInput(int value)

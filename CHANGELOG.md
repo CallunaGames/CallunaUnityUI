@@ -1,3 +1,31 @@
+## [1.10.0] - 2026-09-29
+
+Requires `com.calluna.core` 1.7.0. Release together with `com.calluna.inventory` 1.2.0, whose `Container.ActiveSlots` now reports individual changes instead of a reset.
+
+### Added
+- `VirtualScrollBase.SetLayoutDirty()` / `ApplyLayoutChanges()` — batched layout update. `SetLayoutDirty()` marks content size and visible cells as outdated; `ApplyLayoutChanges()` resizes the content and reconciles the visible cells once. It runs automatically on `Canvas.preWillRenderCanvases` - after all `LateUpdate` calls, independent of script execution order - and can be called to apply changes earlier.
+- `VirtualScrollBase.SwapActiveItems(int, int)` — moves two active cells to each other's position without returning or requesting cells.
+- `VirtualScrollBase.ReturnAllActiveItems()` — returns all active cells to the pool.
+
+### Changed
+- `VirtualScrollView` subscribes via `ReadonlyObservableList.Subscribe(added:, removed:, replaced:, swapped:, reset:)` instead of the obsolete list events, and updates content size and visible cells once per frame instead of once per change. A burst of changes (e.g. `OverrideWithEvents` after a sort or filter change) no longer requests cells for intermediate states.
+  - Swap: the two cells trade positions; previously both were returned and requested again.
+  - Replace: the cell is returned right away, the new one is requested with the layout update.
+  - Reset (`Clear`, `OverrideWith`): all cells are returned right away, the visible ones are requested with the layout update.
+- `VirtualScrollBase.ScrollToIndex` and scroll events apply pending layout changes first, so they always work with the current content size.
+- `VirtualScrollBase.LateUpdate` handles viewport-size changes and `SetDirty()` through the batched layout update.
+- `BasicDropdown` uses `SubscribeAny` instead of the obsolete `ObservableListChangeDetector`. The subscription is created in `Initialize` (previously the detector was created in `Inject`).
+- `RollingNumber<T>` runs its roll in a `CoroutineSlot` instead of `CoroutineHelper.ReplaceWithID`. The slot is recreated on every `Inject`, so a replaced `CoroutineHelper` (e.g. after a scene reload) is never used.
+- `RollingNumber<T>.WithValue()` subscribes only once the rolling number is applied; before that, `Apply()` subscribes.
+- `package.json`: `unity` / `unityRelease` fixed to `6000.0` / `33f1`.
+
+### Fixed
+- `RollingNumber<T>` stopped updating after `Clean()` followed by `Initialize()` without a new `WithValue()` call, because `Apply()` didn't subscribe again.
+- `RollingNumber<T>` kept rolling after `Clean()`. The roll is now stopped.
+- `RollingNumber<T>` threw a `NullReferenceException` if the value changed between `WithValue()` and the first `Apply()`.
+
+---
+
 ## [1.9.0] - 2026-06-28
 
 ### Added

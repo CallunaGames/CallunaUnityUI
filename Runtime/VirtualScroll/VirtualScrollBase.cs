@@ -40,6 +40,8 @@ namespace Calluna.UI
         protected bool _isDirty;
         private bool _initialized;
         private bool _deferFirstActivation;
+        private bool _hasActivationStarted;
+        private bool _isLayoutDirty;
         private Vector2 _lastViewportSize;
         private RectTransform _viewport;
 
@@ -88,7 +90,10 @@ namespace Calluna.UI
 
             _initialized          = true;
             _deferFirstActivation = true;
+            _hasActivationStarted = false;
+            _isLayoutDirty        = false;
             _scrollRect.onValueChanged.AddListener(OnScrolled);
+            Canvas.preWillRenderCanvases += ApplyLayoutChanges;
             ResizeContent();
         }
 
@@ -99,16 +104,42 @@ namespace Calluna.UI
             // while the pool is mid-teardown.
             _initialized          = false;
             _deferFirstActivation = false;
+            _hasActivationStarted = false;
+            _isLayoutDirty        = false;
             _lastViewportSize     = Vector2.zero;
             _pendingScrollIndex   = -1;
             _viewport             = null;
             _scrollRect.onValueChanged.RemoveListener(OnScrolled);
+            Canvas.preWillRenderCanvases -= ApplyLayoutChanges;
             _scrollTweener?.Stop();
             _scrollRect.StopMovement();
             ReturnAll();
         }
 
         protected void SetDirty() => _isDirty = true;
+
+        // ── Batched layout update ────────────────────────────────────────────────
+
+        /// <summary>
+        /// Marks the content size and the visible cells as outdated. They are updated once by
+        /// <see cref="ApplyLayoutChanges"/> right before the canvases render - after all
+        /// <c>LateUpdate</c> calls - so any number of changes in a frame costs a single update.
+        /// </summary>
+        protected void SetLayoutDirty() => _isLayoutDirty = true;
+
+        /// <summary>
+        /// Resizes the content and reconciles the visible cells if <see cref="SetLayoutDirty"/> was
+        /// called. Runs automatically before the canvases render; call it to apply changes earlier.
+        /// Until the deferred first activation happened, only the content is resized.
+        /// </summary>
+        protected void ApplyLayoutChanges()
+        {
+            if (!_initialized || !_isLayoutDirty) return;
+            _isLayoutDirty = false;
+            ResizeContent();
+            if (_hasActivationStarted)
+                RefreshVisibleItems();
+        }
 
         // ── Fine-grained update helpers ──────────────────────────────────────────
 
@@ -165,6 +196,28 @@ namespace Calluna.UI
         }
 
         /// <summary>
+        /// Moves the active cells at <paramref name="index1"/> and <paramref name="index2"/> to each
+        /// other's position. The cells keep their data, so nothing is returned or requested. A cell
+        /// moved out of view stays active until the next <see cref="RefreshVisibleItems"/>.
+        /// </summary>
+        protected void SwapActiveItems(int index1, int index2)
+        {
+            bool hasItem1 = _activeItems.Remove(index1, out TItem item1);
+            bool hasItem2 = _activeItems.Remove(index2, out TItem item2);
+            if (hasItem1) PlaceActiveItem(item1, index2);
+            if (hasItem2) PlaceActiveItem(item2, index1);
+        }
+
+        /// <summary>Returns all active cells to the pool.</summary>
+        protected void ReturnAllActiveItems() => ReturnAll();
+
+        private void PlaceActiveItem(TItem item, int index)
+        {
+            _activeItems[index] = item;
+            ((RectTransform)item.transform).anchoredPosition = _layout.ComputeItemPosition(index);
+        }
+
+        /// <summary>
         /// Scrolls so that the item at <paramref name="index"/> is visible according to
         /// <paramref name="alignment"/>. When <paramref name="duration"/> is greater than zero
         /// the scroll is animated using the supplied <paramref name="tweenType"/>; otherwise it
@@ -182,6 +235,9 @@ namespace Calluna.UI
             TweenType tweenType = TweenType.EaseInOutSine)
         {
             if (!_initialized || index < 0) return;
+
+            // The ScrollRect maps normalized positions onto the current content size.
+            ApplyLayoutChanges();
 
             // ItemCount may be zero before the container has finished its first rebuild (e.g. when
             // ScheduleActiveSlotsUpdate defers the initial ActiveSlots build to end-of-frame). Store
@@ -246,6 +302,9 @@ namespace Calluna.UI
 
         protected virtual void OnApplicationQuit() => CleanBase();
 
+        // Canvas.preWillRenderCanvases is static - never let it reference a destroyed view.
+        protected virtual void OnDestroy() => Canvas.preWillRenderCanvases -= ApplyLayoutChanges;
+
         protected virtual void LateUpdate()
         {
             if (!_initialized) return;
@@ -256,18 +315,23 @@ namespace Calluna.UI
                 return;
             }
 
+            _hasActivationStarted = true;
+
             Vector2 viewportSize = _viewport.rect.size;
             if (viewportSize != _lastViewportSize)
             {
                 _lastViewportSize = viewportSize;
-                RefreshVisibleItems();
+                SetLayoutDirty();
             }
 
             if (_isDirty)
             {
                 _isDirty = false;
-                Rebuild();
+                ReturnAll();
+                SetLayoutDirty();
             }
+
+            ApplyLayoutChanges();
 
             if (_pendingScrollIndex >= 0)
             {
@@ -281,11 +345,21 @@ namespace Calluna.UI
 
         // ── Core logic ───────────────────────────────────────────────────────────
 
-        private void OnScrolled(Vector2 _) => RefreshVisibleItems();
+        private void OnScrolled(Vector2 _)
+        {
+            // Pending list changes are applied along the way, so the refresh sees the current content.
+            if (_isLayoutDirty)
+            {
+                _isLayoutDirty = false;
+                ResizeContent();
+            }
+            RefreshVisibleItems();
+        }
 
         protected void Rebuild()
         {
-            _contentRect.sizeDelta = _layout.ComputeContentSize(ItemCount);
+            _isLayoutDirty = false;
+            ResizeContent();
             ReturnAll();
             RefreshVisibleItems();
         }

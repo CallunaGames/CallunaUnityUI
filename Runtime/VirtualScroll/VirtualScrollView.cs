@@ -1,3 +1,4 @@
+using System;
 using Calluna;
 using Calluna.DI;
 using UnityEngine;
@@ -9,15 +10,16 @@ namespace Calluna.UI
     /// DI argument to each cell when it is (re-)activated. The pool injects and initialises the
     /// cell so it can read its data via <c>resolver.Resolve&lt;TData&gt;()</c>.
     ///
-    /// Reacts to <see cref="ReadonlyObservableList{TData}"/> events:
+    /// Reacts to the individual changes of its <see cref="ReadonlyObservableList{TData}"/>:
     /// <list type="bullet">
-    ///   <item>Replace/swap — only the affected visible cells are refreshed; no rebuild.</item>
-    ///   <item>Insert/remove — active cells above the mutation point are shifted and repositioned;
-    ///         <see cref="VirtualScrollBase{TItem}.RefreshVisibleItems"/> reconciles the visible range.</item>
-    ///   <item><see cref="ReadonlyObservableList{TData}.OnContentsReplaced"/> (bulk replace via
-    ///         <c>OverrideWith</c>) — triggers a single <see cref="VirtualScrollBase{TItem}.Rebuild"/>
-    ///         instead of one refresh per changed element.</item>
+    ///   <item>Swap — the two active cells trade positions; no cell is returned or requested.</item>
+    ///   <item>Replace — the active cell is returned; the new one is requested with the next layout update.</item>
+    ///   <item>Insert/remove — active cells behind the mutation point are shifted and repositioned.</item>
+    ///   <item>Reset (<c>Clear</c>, <c>OverrideWith</c>) — all active cells are returned.</item>
     /// </list>
+    /// Content size and visible cells are then updated once per frame, right before the canvases
+    /// render (see <see cref="VirtualScrollBase{TItem}.SetLayoutDirty"/>) - so a burst of changes,
+    /// e.g. from <c>OverrideWithEvents</c>, doesn't request cells for intermediate states.
     ///
     /// DI bindings required:
     /// <list type="bullet">
@@ -35,6 +37,7 @@ namespace Calluna.UI
         private Pool<TItem, TData, PrefabInstantiationArguments> _pool;
         private ReadonlyObservableList<TData> _items;
         private QuitDetector _quitDetector;
+        private IDisposable _itemsSubscription;
 
         protected override int ItemCount => _items.Count;
 
@@ -49,29 +52,27 @@ namespace Calluna.UI
 
         void Initializable.Initialize()
         {
-            _quitDetector.OnQuit      += UnsubscribeItems;
-            _items.OnItemAdded        += OnItemAdded;
-            _items.OnItemRemoved      += OnItemRemoved;
-            _items.OnItemReplaced     += OnItemReplaced;
-            _items.OnItemsSwapped     += OnItemsSwapped;
-            _items.OnContentsReplaced += Rebuild;
+            _quitDetector.OnQuit += UnsubscribeItems;
+            _itemsSubscription = _items.Subscribe(
+                added: OnItemAdded,
+                removed: OnItemRemoved,
+                replaced: OnItemReplaced,
+                swapped: OnItemsSwapped,
+                reset: OnItemsReset);
             InitializeBase();
         }
 
         void Cleanable.Clean()
         {
-            _quitDetector.OnQuit  -= UnsubscribeItems;
+            _quitDetector.OnQuit -= UnsubscribeItems;
             UnsubscribeItems();
             CleanBase();
         }
 
         private void UnsubscribeItems()
         {
-            _items.OnItemAdded        -= OnItemAdded;
-            _items.OnItemRemoved      -= OnItemRemoved;
-            _items.OnItemReplaced     -= OnItemReplaced;
-            _items.OnItemsSwapped     -= OnItemsSwapped;
-            _items.OnContentsReplaced -= Rebuild;
+            _itemsSubscription?.Dispose();
+            _itemsSubscription = null;
         }
 
         /// <summary>
@@ -90,30 +91,39 @@ namespace Calluna.UI
         protected override void ReturnItem(TItem item)
             => _pool.Return(item);
 
-        // ── List event handlers ──────────────────────────────────────────────────
+        // ── List change handlers ─────────────────────────────────────────────────
 
         private void OnItemAdded(TData _, int index)
         {
             ShiftActiveItems(index, +1);
-            ResizeContent();
-            RefreshVisibleItems();
+            SetLayoutDirty();
         }
 
         private void OnItemRemoved(TData _, int index)
         {
             ReturnActiveItemAt(index);
             ShiftActiveItems(index + 1, -1);
-            ResizeContent();
-            RefreshVisibleItems();
+            SetLayoutDirty();
         }
 
+        // The cell got its data when it was requested, so a new item needs a new cell.
         private void OnItemReplaced(TData _, TData _2, int index)
-            => ReplaceActiveItem(index);
+        {
+            ReturnActiveItemAt(index);
+            SetLayoutDirty();
+        }
 
+        // The cells keep their data - they just move along with it.
         private void OnItemsSwapped(TData _, int index1, TData _2, int index2)
         {
-            ReplaceActiveItem(index1);
-            ReplaceActiveItem(index2);
+            SwapActiveItems(index1, index2);
+            SetLayoutDirty();
+        }
+
+        private void OnItemsReset()
+        {
+            ReturnAllActiveItems();
+            SetLayoutDirty();
         }
     }
 }
