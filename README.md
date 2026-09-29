@@ -101,7 +101,7 @@ BasicInput<TValue> : MonoBehaviour, Injectable, Initializable, Cleanable
 | `ToggleInput` | `UnityEngine.UI.Toggle` | `bool` |
 | `BasicDropdown` | `TMP_Dropdown` | `int` (selected index) |
 
-`BasicDropdown` additionally resolves a `ReadonlyObservableList<TMP_Dropdown.OptionData>` for the option list, and reacts live to list changes using `ObservableListChangeDetector<T>`.
+`BasicDropdown` additionally resolves a `ReadonlyObservableList<TMP_Dropdown.OptionData>` for the option list, and reacts live to list changes via `SubscribeAny` - several changes in a frame rebuild the options once.
 
 `TextInput` subclasses emit a `Debug.LogWarning` and fire the `ParsingFailed` event (`Action<string>`) when `TryParseInput` returns false. Override `OnParseFailure(string)` for custom error handling beyond the event. Text inputs also optionally resolve a `CultureInfo` from DI for number formatting; when absent, `CultureInfo.InvariantCulture` is used.
 
@@ -229,7 +229,7 @@ rollingNumber
 | `WithFormat(Func<T,string>)` | Custom display formatter |
 | `WithRollOnInit(bool)` | When `true`, the number animates in from zero on first display |
 
-`Apply()` throws `InvalidOperationException` if called before `WithValue()`.
+`Apply()` throws `InvalidOperationException` if called before `WithValue()`. `Apply()` subscribes to the value (replacing an earlier subscription); a `WithValue()` after `Apply()` switches the subscription right away. `Clean()` unsubscribes and stops a running roll.
 
 **DI requirements:** `CoroutineHelper` (provided by Calluna Core) must be bound in the same context.
 
@@ -339,6 +339,20 @@ IScrollLayout
 VirtualScrollBase<TItem>                   — MonoBehaviour, shared scroll/pool/layout logic
     VirtualScrollView<TItem, TData>        — data list from ReadonlyObservableList<TData>
 ```
+
+#### Reacting to list changes
+
+`VirtualScrollView` handles each change of its data list individually and only touches the affected cells:
+
+| Change | Handling |
+|---|---|
+| Add / insert | Active cells behind the index are shifted and repositioned |
+| Remove | The cell is returned; cells behind it are shifted up |
+| Replace | The cell is returned; the new item gets a cell with the next layout update |
+| Swap | The two cells trade positions - no cell is returned or requested |
+| Reset (`Clear`, `OverrideWith`) | All cells are returned |
+
+Content size and visible cells are then updated **once per frame**, right before the canvases render (`Canvas.preWillRenderCanvases`). A burst of changes - e.g. from `OverrideWithEvents` after a sort or filter change - therefore never requests cells for intermediate states. `ScrollToIndex` and scroll events apply pending changes first. Subclasses of `VirtualScrollBase` use the same mechanism via `SetLayoutDirty()` / `ApplyLayoutChanges()`, and can move cells with `SwapActiveItems(int, int)`.
 
 `IScrollLayout` is a pure-geometry interface. Implement it to create a custom layout:
 

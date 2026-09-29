@@ -169,6 +169,10 @@ namespace Calluna.UI.Tests
         [Test]
         public void VirtualScrollBase_InitializeBase_SetsContentRectToTopLeftAnchorAndZeroPosition()
         {
+            // As in a real ScrollRect, the content is a child of the viewport: normalizedPosition
+            // (0, 1) then maps to anchoredPosition zero instead of moving the content.
+            _scrollRect.content.SetParent(_scrollRect.viewport, false);
+
             _scroll.DoInitialize();
 
             RectTransform content = _scrollRect.content;
@@ -617,6 +621,128 @@ namespace Calluna.UI.Tests
                 "item originally at index 2 must be repositioned to index 3");
         }
 
+        // ── Batched layout update ────────────────────────────────────────────────
+
+        [Test]
+        [Description("SetLayoutDirty => nothing changes until ApplyLayoutChanges?")]
+        public void VirtualScrollBase_SetLayoutDirty_DefersResizeAndActivationUntilApply()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+            _scroll.DoSettle();
+            int requestsBefore = _scroll.RequestCount;
+
+            _scroll.SetItemCount(5);
+            _scroll.DoSetLayoutDirty();
+
+            Assert.AreEqual(requestsBefore, _scroll.RequestCount, "no cell before the layout update");
+            Assert.AreEqual(new Vector2(300f, 120f), _scrollRect.content.sizeDelta, "no resize before the layout update");
+
+            _scroll.DoApplyLayoutChanges();
+
+            Assert.AreEqual(requestsBefore + 2, _scroll.RequestCount, "the two new visible items must be activated");
+            Assert.AreEqual(new Vector2(300f, 200f), _scrollRect.content.sizeDelta);
+        }
+
+        [Test]
+        [Description("ApplyLayoutChanges twice => second call does nothing?")]
+        public void VirtualScrollBase_ApplyLayoutChanges_WithoutSetLayoutDirty_DoesNothing()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+            _scroll.DoSettle();
+            _scroll.DoSetLayoutDirty();
+            _scroll.DoApplyLayoutChanges();
+            int viewportCallsBefore = _scroll.ViewportRectCallCount;
+
+            _scroll.DoApplyLayoutChanges();
+
+            Assert.AreEqual(viewportCallsBefore, _scroll.ViewportRectCallCount);
+        }
+
+        [Test]
+        [Description("ApplyLayoutChanges before the deferred first activation => resizes, activates nothing?")]
+        public void VirtualScrollBase_ApplyLayoutChanges_BeforeFirstActivation_OnlyResizes()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+            _scroll.DoLateUpdate(); // consumes the defer flag; activation starts with the next LateUpdate
+
+            _scroll.SetItemCount(5);
+            _scroll.DoSetLayoutDirty();
+            _scroll.DoApplyLayoutChanges();
+
+            Assert.AreEqual(0, _scroll.RequestCount, "the first activation must stay deferred");
+            Assert.AreEqual(new Vector2(300f, 200f), _scrollRect.content.sizeDelta);
+        }
+
+        [Test]
+        [Description("ApplyLayoutChanges after Clean => does nothing?")]
+        public void VirtualScrollBase_ApplyLayoutChanges_AfterClean_DoesNothing()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+            _scroll.DoSettle();
+            _scroll.DoSetLayoutDirty();
+            _scroll.DoClean();
+            int requestsBefore = _scroll.RequestCount;
+
+            _scroll.DoApplyLayoutChanges();
+
+            Assert.AreEqual(requestsBefore, _scroll.RequestCount);
+        }
+
+        [Test]
+        [Description("ScrollToIndex with a pending layout change => scrolls against the new content size?")]
+        public void VirtualScrollBase_ScrollToIndex_AppliesPendingLayoutChangesFirst()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+            _scroll.DoSettle();
+
+            _scroll.SetItemCount(20);
+            _scroll.DoSetLayoutDirty();
+            _scroll.DoScrollToIndex(10, ScrollAlignment.Start);
+
+            Assert.AreEqual(new Vector2(300f, 800f), _scrollRect.content.sizeDelta,
+                "the content must be resized before scrolling");
+        }
+
+        [Test]
+        [Description("SwapActiveItems => cells trade positions without return or request?")]
+        public void VirtualScrollBase_SwapActiveItems_MovesCellsWithoutPoolTraffic()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+            _scroll.DoSettle(); // items 0, 1, 2 active
+            int requestsBefore = _scroll.RequestCount;
+
+            _scroll.DoSwapActiveItems(0, 2);
+
+            Assert.AreEqual(requestsBefore, _scroll.RequestCount);
+            Assert.AreEqual(0, _scroll.ReturnCount);
+            Assert.AreEqual(new Vector2(0f, -80f), _scroll.RequestedItems[0].anchoredPosition,
+                "cell from index 0 must move to index 2");
+            Assert.AreEqual(new Vector2(0f, 0f), _scroll.RequestedItems[2].anchoredPosition,
+                "cell from index 2 must move to index 0");
+        }
+
+        [Test]
+        [Description("SwapActiveItems with one inactive index => the active cell moves, nothing is requested?")]
+        public void VirtualScrollBase_SwapActiveItems_OneInactiveIndex_MovesOnlyTheActiveCell()
+        {
+            _scroll.SetItemCount(3);
+            _scroll.DoInitialize();
+            _scroll.DoSettle();
+            _scroll.DoReturnActiveItemAt(2);
+            int requestsBefore = _scroll.RequestCount;
+
+            _scroll.DoSwapActiveItems(0, 2);
+
+            Assert.AreEqual(requestsBefore, _scroll.RequestCount);
+            Assert.AreEqual(new Vector2(0f, -80f), _scroll.RequestedItems[0].anchoredPosition);
+        }
+
         // ── Test double ──────────────────────────────────────────────────────────
 
         private sealed class FakeScrollBase : VirtualScrollBase<RectTransform>
@@ -689,6 +815,9 @@ namespace Calluna.UI.Tests
             public void DoClean()      => CleanBase();
             public void DoLateUpdate() => LateUpdate();
             public void DoSetDirty()   => SetDirty();
+            public void DoSetLayoutDirty()     => SetLayoutDirty();
+            public void DoApplyLayoutChanges() => ApplyLayoutChanges();
+            public void DoSwapActiveItems(int index1, int index2) => SwapActiveItems(index1, index2);
 
             public void DoReturnActiveItemAt(int index) => ReturnActiveItemAt(index);
             public void DoReplaceActiveItem(int index)  => ReplaceActiveItem(index);

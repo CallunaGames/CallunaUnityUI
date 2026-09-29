@@ -16,7 +16,8 @@ namespace Calluna.UI
         private Func<float, float> _easeFunction = f => f;
         private Func<T, string> _formatter = f => f is IFormattable fmt ? fmt.ToString(null, null) : f?.ToString() ?? string.Empty;
         private T _currentValue;
-        private string _coroutineId;
+        private CoroutineSlot _rollSlot;
+        private IDisposable _valueSubscription;
         private bool _shouldRollOnInit;
         private float _activeDuration;
         private RollingNumberAnimator<T> _animator;
@@ -25,18 +26,22 @@ namespace Calluna.UI
         void Injectable.Inject(Resolver resolver)
         {
             _coroutineHelper = resolver.Resolve<CoroutineHelper>();
-            _coroutineId = GetHashCode().ToString();
+            // A new slot per injection: the helper may be a new instance, e.g. after a scene reload.
+            // Clean already stopped the former slot's roll.
+            _rollSlot = new CoroutineSlot(_coroutineHelper);
             _activeDuration = _duration;
         }
 
+        /// <summary>
+        /// Sets the displayed value. Takes effect with <see cref="Apply"/> - or right away if the
+        /// rolling number is already applied.
+        /// </summary>
         public RollingNumber<T> WithValue(ReadonlyObservable<T> value)
         {
-            if (_value != null)
-                _value.OnChanged -= OnValueChanged;
-
             _value = value;
-            _value.OnChanged += OnValueChanged;
             _currentValue = _value.Value;
+            if (_isApplied)
+                SubscribeToValue();
             return this;
         }
 
@@ -87,14 +92,23 @@ namespace Calluna.UI
             _isApplied = true;
             _animator = new RollingNumberAnimator<T>(Interpolate, _easeFunction, _formatter);
             _currentValue = _value.Value;
-            _coroutineHelper.ReplaceWithID(Roll(_shouldRollOnInit ? _activeDuration : 0f), _coroutineId);
+            SubscribeToValue();
+            _rollSlot.Run(Roll(_shouldRollOnInit ? _activeDuration : 0f));
         }
 
         void Cleanable.Clean()
         {
             _isApplied = false;
-            if (_value != null)
-                _value.OnChanged -= OnValueChanged;
+            _valueSubscription?.Dispose();
+            _valueSubscription = null;
+            _rollSlot?.Stop();
+        }
+
+        // Replaces a former subscription, so Apply and WithValue can be called repeatedly.
+        private void SubscribeToValue()
+        {
+            _valueSubscription?.Dispose();
+            _valueSubscription = _value.Subscribe(OnValueChanged);
         }
 
         private void Reset()
@@ -104,7 +118,7 @@ namespace Calluna.UI
 
         private void OnValueChanged()
         {
-            _coroutineHelper.ReplaceWithID(Roll(_activeDuration), _coroutineId);
+            _rollSlot.Run(Roll(_activeDuration));
         }
 
         private IEnumerator Roll(float duration)

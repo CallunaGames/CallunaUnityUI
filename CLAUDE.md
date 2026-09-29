@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 `com.calluna.ui` (v1.7.0) — A Unity UPM package providing reactive UI MonoBehaviours built on top of Calluna's Observable/DI systems. Targets Unity 6000.33 LTS.
 
 **Dependencies:**
-- `com.calluna.core` — provides `Observable<T>`, `ReadonlyObservable<T>`, `CoroutineHelper`, `ScriptableObjectId`, `ObservableListChangeDetector<T>`
+- `com.calluna.core` (1.7.0+) — provides `Observable<T>`, `ReadonlyObservable<T>`, `ObservableList<T>` (`Subscribe`/`SubscribeAny` returning `IDisposable`), `CoroutineHelper`/`CoroutineSlot`, `ScriptableObjectId`
 - `com.calluna.di` — provides `Injectable`, `Initializable`, `Cleanable` lifecycle interfaces, `Resolver`, `Binder`, `MonoInstaller`
 - TextMeshPro — `TextMeshProUGUI`, `TMP_InputField`, `TMP_Dropdown`
 - UnityEngine.UI — `Slider`, `Image`, `Button`, `Toggle`, `Graphic`, `RectTransform`
@@ -46,7 +46,7 @@ The DI container calls these in order at scene startup. `Clean()` must exactly u
 - `TextInput<TValue>` → `FloatInput`, `IntInput`, `StringInput` (backed by `TMP_InputField`)
 - `SliderInput<TValue>` → `FloatSlider`, `IntSlider` (backed by `UnityEngine.UI.Slider`)
 - `ToggleInput` (backed by `Toggle`)
-- `BasicDropdown` (backed by `TMP_Dropdown`) — uses `ObservableListChangeDetector<T>` and a dirty flag polled in `Update()` to batch option list rebuilds.
+- `BasicDropdown` (backed by `TMP_Dropdown`) — uses `SubscribeAny` on the option list and a dirty flag polled in `Update()` to batch option list rebuilds.
 
 Base classes handle DI wiring and Observable subscription; subclasses implement `AddInputListener()`, `RemoveInputListener()`, and value parsing — Template Method pattern.
 
@@ -54,7 +54,7 @@ Base classes handle DI wiring and Observable subscription; subclasses implement 
 `ProgressBar` (Slider-based) and `FilledImageProgressDisplay` (Image fill-based). Both subscribe to `ReadonlyObservable<float>` in the 0–1 range.
 
 **RollingNumber** (`Runtime/RollingNumber/`)  
-`RollingNumber<T>` → `FloatRollingNumber`, `IntRollingNumber`. Animated number transitions using `CoroutineHelper` (coroutines keyed by ID). Implements all three DI interfaces. If `WithValue()` is called before the container runs `Initialize()`, the component initialises automatically. If fluent setup happens after injection (common pattern), call `Init()` manually after the builder chain:
+`RollingNumber<T>` → `FloatRollingNumber`, `IntRollingNumber`. Animated number transitions run in a `CoroutineSlot` (recreated on every `Inject`). Implements all three DI interfaces. If `WithValue()` is called before the container runs `Initialize()`, the component initialises automatically. If fluent setup happens after injection (common pattern), call `Apply()` manually after the builder chain. `Apply()` subscribes to the value; `Clean()` unsubscribes and stops a running roll:
 
 ```csharp
 rollingNumber.WithValue(observable)
@@ -66,6 +66,9 @@ rollingNumber.WithValue(observable)
 
 **Styles** (`Runtime/Styles/`)  
 ScriptableObject-based color theming. `ColorStyleId` (extends `ScriptableObjectId`) is a type-safe asset reference. `ColorStyleSettings` maps IDs to colors. `ApplyColorStyle` subscribes to `Observable<ColorStyleSettings>` and applies colors to `Graphic` components. `SetColorStylesButton` / `ClearColorStylesButton` mutate the observable to switch themes.
+
+**VirtualScroll** (`Runtime/VirtualScroll/`)  
+`VirtualScrollBase<TItem>` → `VirtualScrollView<TItem, TData>`. The view handles each list change cheaply (shift/return/swap cells) and calls `SetLayoutDirty()`; `ApplyLayoutChanges()` then resizes the content and reconciles the visible cells once, on `Canvas.preWillRenderCanvases` (after all `LateUpdate`s, independent of script execution order). `ScrollToIndex` and scroll events apply pending changes first.
 
 **Drag** (`Runtime/Drag/`)  
 `DragableUI` implements `IDragHandler`, `IBeginDragHandler`, `IEndDragHandler`. `DragableUIInstaller` (a `MonoInstaller`) configures DI with an `Arguments` struct holding an optional `RectTransform` bounds reference.

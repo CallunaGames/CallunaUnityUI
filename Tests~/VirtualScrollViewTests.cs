@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Reflection;
 using System;
 using Calluna.DI;
@@ -99,27 +100,104 @@ namespace Calluna.UI.Tests
             _scroll.DoSettle(); // settle deferred activation so items a,b,c are active
             int requestsBefore = _scroll.RequestCount;
 
-            _items[1] = "B"; // fires OnItemReplaced → ReplaceActiveItem(1)
+            _items[1] = "B"; // returns the cell; the new one is requested with the layout update
 
             Assert.AreEqual(1, _scroll.ReturnCount,
                 "must return the replaced item");
+            Assert.AreEqual(requestsBefore, _scroll.RequestCount,
+                "must not request before the layout update");
+
+            _scroll.DoApplyLayoutChanges();
+
             Assert.AreEqual(requestsBefore + 1, _scroll.RequestCount,
                 "must request a replacement cell for the replaced index");
         }
 
         [Test]
-        public void VirtualScrollView_OnItemsSwapped_ActiveItems_BothGetReplaced()
+        public void VirtualScrollView_OnItemReplacedTwiceInAFrame_RequestsOnce()
+        {
+            _scroll.DoInitialize();
+            _scroll.DoSettle();
+            int requestsBefore = _scroll.RequestCount;
+
+            _items[1] = "B";
+            _items[1] = "C";
+            _scroll.DoApplyLayoutChanges();
+
+            Assert.AreEqual(requestsBefore + 1, _scroll.RequestCount,
+                "the intermediate item must never get a cell");
+        }
+
+        [Test]
+        public void VirtualScrollView_OnItemsSwapped_ActiveItems_TradePositionsWithoutPoolTraffic()
         {
             _scroll.DoInitialize();
             _scroll.DoSettle(); // settle deferred activation so items a,b,c are active
             int requestsBefore = _scroll.RequestCount;
+            RectTransform cellA = _scroll.Requested[0];
+            RectTransform cellC = _scroll.Requested[2];
 
-            _items.Swap(0, 2); // fires OnItemsSwapped → ReplaceActiveItem(0) + ReplaceActiveItem(2)
+            _items.Swap(0, 2);
+            _scroll.DoApplyLayoutChanges();
 
-            Assert.AreEqual(2, _scroll.ReturnCount,
-                "must return both swapped items");
-            Assert.AreEqual(requestsBefore + 2, _scroll.RequestCount,
-                "must request replacements for both swapped indices");
+            Assert.AreEqual(0, _scroll.ReturnCount, "swapped cells must not be returned");
+            Assert.AreEqual(requestsBefore, _scroll.RequestCount, "swapped cells must not be requested");
+            Assert.AreEqual(new Vector2(0f, -80f), cellA.anchoredPosition, "cell of 'a' must move to index 2");
+            Assert.AreEqual(new Vector2(0f, 0f), cellC.anchoredPosition, "cell of 'c' must move to index 0");
+        }
+
+        [Test]
+        public void VirtualScrollView_SeveralAddsInAFrame_RequestOnlyOnLayoutUpdate()
+        {
+            _scroll.DoInitialize();
+            _scroll.DoSettle();
+            int requestsBefore = _scroll.RequestCount;
+
+            _items.Add("d");
+            _items.Add("e");
+            _items.Add("f");
+            _items.Insert(0, "x"); // the viewport shows indices 0-5: 'f' ends up out of view
+
+            Assert.AreEqual(requestsBefore, _scroll.RequestCount, "must not request before the layout update");
+
+            _scroll.DoApplyLayoutChanges();
+
+            Assert.AreEqual(requestsBefore + 3, _scroll.RequestCount,
+                "only the new visible items 'x', 'd' and 'e' must be requested");
+            Assert.AreEqual(0, _scroll.ReturnCount);
+            Assert.AreEqual(new Vector2(300f, 280f), _scroll.ContentSize);
+        }
+
+        [Test]
+        public void VirtualScrollView_Removed_ReturnsCellAndShiftsTheRest()
+        {
+            _scroll.DoInitialize();
+            _scroll.DoSettle();
+            RectTransform cellC = _scroll.Requested[2];
+
+            _items.RemoveAt(0);
+            _scroll.DoApplyLayoutChanges();
+
+            Assert.AreEqual(1, _scroll.ReturnCount);
+            Assert.AreEqual(new Vector2(0f, -40f), cellC.anchoredPosition, "cell of 'c' must move to index 1");
+            Assert.AreEqual(new Vector2(300f, 80f), _scroll.ContentSize);
+        }
+
+        [Test]
+        public void VirtualScrollView_Reset_ReturnsAllCellsAndRebuildsOnLayoutUpdate()
+        {
+            _scroll.DoInitialize();
+            _scroll.DoSettle();
+            int requestsBefore = _scroll.RequestCount;
+
+            _items.OverrideWith(new[] { "x", "y" });
+
+            Assert.AreEqual(3, _scroll.ReturnCount, "a reset must return all cells right away");
+
+            _scroll.DoApplyLayoutChanges();
+
+            Assert.AreEqual(requestsBefore + 2, _scroll.RequestCount);
+            Assert.AreEqual(new Vector2(300f, 80f), _scroll.ContentSize);
         }
 
         [Test]
@@ -138,12 +216,18 @@ namespace Calluna.UI.Tests
 
             private readonly FakePool _pool = new FakePool();
 
+            public readonly List<RectTransform> Requested = new List<RectTransform>();
+
+            public Vector2 ContentSize => _contentRect.sizeDelta;
+
             protected override RectTransform RequestItem(int index)
             {
                 RequestCount++;
                 var go = new GameObject($"Item{index}", typeof(RectTransform));
                 go.transform.SetParent(transform);
-                return go.GetComponent<RectTransform>();
+                var rt = go.GetComponent<RectTransform>();
+                Requested.Add(rt);
+                return rt;
             }
 
             protected override void ReturnItem(RectTransform item)
@@ -163,6 +247,8 @@ namespace Calluna.UI.Tests
             }
 
             public void DoLateUpdate() => LateUpdate();
+
+            public void DoApplyLayoutChanges() => ApplyLayoutChanges();
 
             // Two LateUpdate calls: first clears the defer flag, second activates visible items.
             public void DoSettle() { DoLateUpdate(); DoLateUpdate(); }
