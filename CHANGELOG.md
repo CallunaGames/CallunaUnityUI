@@ -1,3 +1,10 @@
+## [1.10.1] - 2026-09-30
+
+### Added
+- `VirtualScrollViewConsistencyTests` - makes sure the cells always match the data list: every list change (add, insert, remove, replace, swap, clear, `OverrideWith`, `OverrideWithEvents`) at positions before, inside and behind the viewport, several changes per frame and random sequences with scrolling. After every change each active cell must show the item at its index at that index's position, without leaked or double-returned cells; after the layout update exactly the visible indices must have a cell. No runtime changes.
+
+---
+
 ## [1.10.0] - 2026-09-29
 
 Requires `com.calluna.core` 1.7.0. Release together with `com.calluna.inventory` 1.2.0, whose `Container.ActiveSlots` now reports individual changes instead of a reset.
