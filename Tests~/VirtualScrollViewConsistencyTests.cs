@@ -64,7 +64,6 @@ namespace Calluna.UI.Tests
             SetField(_scroll, "_scrollRect", _scrollRect);
             SetField(_scroll, "_layout", _layout);
             SetField(_scroll, "_items", _items);
-            SetField(_scroll, "_quitDetector", _root.AddComponent<TestQuitDetector>());
         }
 
         [TearDown]
@@ -343,7 +342,5 @@ namespace Calluna.UI.Tests
             public RectTransform Request(string arg1, PrefabInstantiationArguments arg2) => null;
             public void Return(RectTransform item) { }
         }
-
-        private sealed class TestQuitDetector : QuitDetector { }
     }
 }
