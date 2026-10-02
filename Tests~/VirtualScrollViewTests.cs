@@ -14,7 +14,6 @@ namespace Calluna.UI.Tests
         private GameObject _root;
         private FakeScrollView _scroll;
         private ObservableList<string> _items;
-        private TestQuitDetector _quitDetector;
 
         [SetUp]
         public void SetUp()
@@ -33,7 +32,6 @@ namespace Calluna.UI.Tests
             scrollRect.viewport = viewportRT;
             scrollRect.content  = contentGO.GetComponent<RectTransform>();
 
-            _quitDetector = _root.AddComponent<TestQuitDetector>();
             _items        = new ObservableList<string> { "a", "b", "c" };
             _scroll       = _root.AddComponent<FakeScrollView>();
 
@@ -45,7 +43,6 @@ namespace Calluna.UI.Tests
                 Padding  = default
             }));
             SetField(_scroll, "_items",        _items);
-            SetField(_scroll, "_quitDetector", _quitDetector);
         }
 
         [TearDown]
@@ -60,7 +57,7 @@ namespace Calluna.UI.Tests
             _scroll.DoInitialize();
             int requestsBefore = _scroll.RequestCount;
 
-            _quitDetector.SetQuitting();
+            ((QuitHandler)_scroll).HandleQuit();
             _items.Add("d");
 
             Assert.AreEqual(requestsBefore, _scroll.RequestCount,
@@ -73,7 +70,7 @@ namespace Calluna.UI.Tests
             _scroll.DoInitialize();
             int requestsBefore = _scroll.RequestCount;
 
-            _quitDetector.SetQuitting();
+            ((QuitHandler)_scroll).HandleQuit();
             _items.RemoveAt(0);
 
             Assert.AreEqual(requestsBefore, _scroll.RequestCount,
@@ -241,7 +238,7 @@ namespace Calluna.UI.Tests
 
             public void DoInitialize()
             {
-                // _layout, _items, _quitDetector already injected via reflection in SetUp.
+                // _layout, _items already injected via reflection in SetUp.
                 SetField(this, "_pool", _pool);
                 ((Initializable)this).Initialize();
             }
@@ -260,11 +257,6 @@ namespace Calluna.UI.Tests
         {
             public RectTransform Request(string arg1, PrefabInstantiationArguments arg2) => null;
             public void Return(RectTransform item) { }
-        }
-
-        private sealed class TestQuitDetector : QuitDetector
-        {
-            public void SetQuitting() => OnApplicationQuitting();
         }
 
         // ── Reflection helper ────────────────────────────────────────────────────

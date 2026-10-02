@@ -26,17 +26,15 @@ namespace Calluna.UI
     ///   <item><see cref="IScrollLayout"/> — any layout implementation</item>
     ///   <item><see cref="Pool{TItem,TData,PrefabInstantiationArguments}"/> — via <c>MonoPoolInstaller&lt;TItem,TData&gt;</c></item>
     ///   <item><see cref="ReadonlyObservableList{TData}"/> — data source</item>
-    ///   <item><see cref="QuitDetector"/> — provided by the DI framework's AppContext</item>
     ///   <item><c>ValueTweener&lt;float&gt;</c> id <see cref="VirtualScrollBase.ScrollTweenerId"/> —
     ///         provided by the layout installer; requires <see cref="CoroutineHelper"/></item>
     /// </list>
     /// </summary>
-    public abstract class VirtualScrollView<TItem, TData> : VirtualScrollBase<TItem>, Injectable, Initializable, Cleanable
-        where TItem : Component
+    public abstract class VirtualScrollView<TItem, TData> : VirtualScrollBase<TItem>, Injectable, Initializable, Cleanable,
+        QuitHandler where TItem : Component
     {
         private Pool<TItem, TData, PrefabInstantiationArguments> _pool;
         private ReadonlyObservableList<TData> _items;
-        private QuitDetector _quitDetector;
         private IDisposable _itemsSubscription;
 
         protected override int ItemCount => _items.Count;
@@ -46,13 +44,11 @@ namespace Calluna.UI
             _layout        = resolver.Resolve<IScrollLayout>();
             _pool          = resolver.Resolve<Pool<TItem, TData, PrefabInstantiationArguments>>();
             _items         = resolver.Resolve<ReadonlyObservableList<TData>>();
-            _quitDetector  = resolver.Resolve<QuitDetector>();
             _scrollTweener = resolver.Resolve<ValueTweener<float>>(ScrollTweenerId);
         }
 
         void Initializable.Initialize()
         {
-            _quitDetector.OnQuit += UnsubscribeItems;
             _itemsSubscription = _items.Subscribe(
                 added: OnItemAdded,
                 removed: OnItemRemoved,
@@ -64,10 +60,13 @@ namespace Calluna.UI
 
         void Cleanable.Clean()
         {
-            _quitDetector.OnQuit -= UnsubscribeItems;
             UnsubscribeItems();
             CleanBase();
         }
+
+        // On quit the contexts are torn down - stop following the list before its owner clears it,
+        // so the view doesn't request cells from a pool that is being torn down.
+        void QuitHandler.HandleQuit() => UnsubscribeItems();
 
         private void UnsubscribeItems()
         {

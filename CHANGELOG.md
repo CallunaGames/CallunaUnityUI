@@ -1,3 +1,12 @@
+## [1.11.0] - 2026-10-02
+
+Requires `com.calluna.core` 1.7.0 and `com.calluna.di` 1.6.0.
+
+### Changed
+- `VirtualScrollView` stops following its list in `QuitHandler.HandleQuit()` instead of on `QuitDetector.OnQuit` (obsolete since DI 1.6.0). It no longer needs a `QuitDetector`; on quit it's called while all contexts are still intact, before any of them is torn down.
+
+---
+
 ## [1.10.1] - 2026-09-30
 
 ### Added
